@@ -7,12 +7,10 @@ Date.prototype.addDays = function(days) {
     date.setDate(date.getDate() + days);
     return date;
 }
-
-
 var svgWidth  = 1200;
 var svgHeight = 800;
 
-var margin	= {top: 100, right: 40, bottom: 200, left: 80},
+var margin	= {top: 40, right: 40, bottom: 200, left: 80},
     width	= svgWidth - margin.left - margin.right,
     height	= svgHeight - margin.top - margin.bottom;
 
@@ -45,11 +43,6 @@ var focus = vis.append("g")
     .attr("class", "focus")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-
-    var contextMargin = {top: 40, right: 40, bottom: 20, left: 40},
-        contextWidth = 500 - contextMargin.left - contextMargin.right,
-        contextHeight = 40;
-
 // focus.append("rect")
 //     .attr("class", "op")
 //     .attr("width", margin.left)
@@ -64,6 +57,11 @@ var eventFocused = focus.append('g')
 eventFocused.append('line')
     .attr("class", 'down')
     .attr("y2", height + 23)
+
+eventFocused.append('line')
+    .attr("class", 'mean')
+    .attr("x1", 0)
+    .attr("x2", width)
 
 eventFocused.append('line')
     .attr("class", 'bottom')
@@ -123,6 +121,7 @@ d3.csv(sourceFile).then(function(dataset) {
         d.date = parseDate(d.d);
         d.yd = parseInt(d.n);
         d.y = parseInt(d.n7)/7;
+        d.v = d.y
     });
 
     var full = Object.assign({}, ...dataset.map((x) => ({[x.date]: x})));
@@ -138,9 +137,11 @@ d3.csv(sourceFile).then(function(dataset) {
 
 
     var extra = d3.timeDays(t_s.date, t_e.date.addDays(49)).map((d, i) => {
+        let v = t_s.y * Math.pow(t_g, i)
         return {
             date: d,
-            p: t_s.y * Math.pow(t_g, i)
+            p: v,
+            v: v
         }
     })
 
@@ -164,7 +165,7 @@ d3.csv(sourceFile).then(function(dataset) {
 
     //var dataXrange = d3.extent(dataset, function(d) { return d.date; });
     var dataYrange = [0, d3.max(dataset, function(d) { return d.yd; })*1.05];
-    var dataXrange = [d3.min(dataset, function(d) { return d.date; }), parseDate("2021-06-01")]
+    var dataXrange = [d3.min(dataset, function(d) { return d.date; }), parseDate("2021-05-01")]
 
     var x = d3.scaleTime()
         .range([0, width])
@@ -272,18 +273,11 @@ d3.csv(sourceFile).then(function(dataset) {
                 .y(d => y(d.p))
                 .curve(d3.curveMonotoneX))
 
-
-        approx.select('.down.start')
-            .attr('x1', xz(t_s.date))
-            .attr('x2', xz(t_s.date))
-        approx.select('.handle.start')
+        approx.selectAll('.start')
             .attr('x1', xz(t_s.date))
             .attr('x2', xz(t_s.date))
 
-        approx.select('.down.end')
-            .attr('x1', xz(t_e.date))
-            .attr('x2', xz(t_e.date))
-        approx.select('.handle.end')
+        approx.selectAll('.end')
             .attr('x1', xz(t_e.date))
             .attr('x2', xz(t_e.date))
 
@@ -336,7 +330,7 @@ d3.csv(sourceFile).then(function(dataset) {
 
         var xc = xScale(d.date);
 
-        var yc = y(d.y ? d.y : d.p);
+        var yc = y(d.v);
 
 
         eventFocused.datum(d)
@@ -350,6 +344,22 @@ d3.csv(sourceFile).then(function(dataset) {
         eventFocused.select('.bottom')
             .attr('x1', xc - size/2)
             .attr('x2', xc + size/2)
+
+        eventFocused.select('.mean')
+            .attr('y1', yc)
+            .attr('y2', yc)
+
+        let lower = full.map(t => t.v <= d.v);
+        let higher = full.map(t => t.v > d.v);
+
+        let ddd = dates.slice(0, -1).filter((e, i) => {
+            return (lower[i] == higher[i+1] && e != d.date);
+        })
+
+        
+        console.log(ddd)
+
+
 
 
         eventFocused.select('.date')
@@ -396,9 +406,6 @@ d3.csv(sourceFile).then(function(dataset) {
         .selectAll("circle")
         .data(dataset)
         .enter().append("circle")
-        .attr("r", 2)
-        .attr("fill", 'blue')
-        .attr("opacity", 0.2)
         .attr("cy", function(d) { return y(d.yd); })
 
     focus.append("g")
@@ -414,9 +421,6 @@ d3.csv(sourceFile).then(function(dataset) {
     context.append("path")
         .attr('class', 'line')
         .datum(dataset)
-        .attr("fill", "none")
-        .attr("stroke", 'black')
-        .attr("stroke-width", 1)
         .attr("d",  d3.line()
             .x(d => x2(d.date))
             .y(d => y2(d.y)))
@@ -427,16 +431,11 @@ d3.csv(sourceFile).then(function(dataset) {
 
     var line = focus.append("path")
         .attr("fill", "none")
-        .attr("class", "line")
-        .attr("stroke", 'black')
-        .attr("stroke-width", 1)
+        .attr("class", "line");
 
     var lineD = focus.append("path")
         .attr("fill", "none")
-        .attr("class", "lined")
-        .attr("opacity", 0.3)
-        .attr("stroke", 'blue')
-        .attr("stroke-width", 1)
+        .attr("class", "lined");
 
     var extraLine = focus.append("path")
         .attr("fill", "none")
@@ -467,7 +466,7 @@ d3.csv(sourceFile).then(function(dataset) {
 
     handle_start.on('click', e => {console.log('clicked')})
 
-    brush.move(context.select('.brush'), [x2(parseDate('2020-09-01')), x2(parseDate('2021-05-01'))])
+    brush.move(context.select('.brush'), [x2(parseDate('2020-10-20')), x2(parseDate('2021-05-01'))])
 
     focusEvent(full[full.length - 49])
 });

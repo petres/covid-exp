@@ -31,7 +31,7 @@ body {
                 font-size: 12px;
             }
             line {
-            	opacity: 0.1;
+            	opacity: 0.3;
             }
         }
     }
@@ -40,11 +40,21 @@ body {
         opacity: 0.1;
     }
 
+    g.daily circle {
+        opacity: 0.2;
+        fill: black;
+        r: 2;
+    }
+
     .eventFocused {
         line {
             stroke: black;
             opacity: 0.8;
             stroke-width: 1.4;
+            &.mean {
+                stroke-dasharray: 10, 10;
+                opacity: 0.6;
+            }
         }
         text {
             font-size: 12px;
@@ -72,6 +82,17 @@ body {
             }
         }
     }
+
+    path.lined {
+        opacity: 0.3;
+        stroke: green;
+        stroke-width: 1;
+    }
+    path.line {
+        opacity: 1;
+        stroke: blue;
+        stroke-width: 1;
+    }
 }
 
 
@@ -79,8 +100,25 @@ body {
     position: relative;
     float: right;
     width: 500px;
+
+    rect.selection {
+        fill-opacity: 0.08;
+        fill: blue;
+    }
+
     .x2.axis line {
     	stroke: black;
     	opacity: 0.2;
+    }
+
+    .x2.axis path {
+        stroke: black;
+        opacity: 0.1;
+    }
+
+    path.line {
+        fill: none;
+        stroke: blue;
+        stroke-width: 1;
     }
 }
