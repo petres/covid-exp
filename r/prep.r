@@ -1,7 +1,11 @@
 library(data.table)
 library(ggplot2)
 
-d.raw = fread('./r/data/CovidFaelle_Timeline.csv')
+#d.raw = fread('./r/data/CovidFaelle_Timeline.csv')
+d.raw = fread(
+    'https://covid19-dashboard.ages.at/data/CovidFaelle_Timeline.csv'
+)
+
 
 d.raw = d.raw[Bundesland == 'Österreich']
 

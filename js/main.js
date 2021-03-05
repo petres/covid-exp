@@ -10,9 +10,9 @@ Date.prototype.addDays = function(days) {
 
 
 var svgWidth  = 1200;
-var svgHeight = 600;
+var svgHeight = 800;
 
-var margin	= {top: 100, right: 40, bottom: 40, left: 80},
+var margin	= {top: 100, right: 40, bottom: 200, left: 80},
     width	= svgWidth - margin.left - margin.right,
     height	= svgHeight - margin.top - margin.bottom;
 
@@ -23,7 +23,6 @@ var contextMargin = {top: 40, right: 40, bottom: 20, left: 40},
 var formatDate = d3.timeFormat("%a, %d. %b %Y")
 var parseDate = d3.timeParse("%Y-%m-%d")
 
-var circleSize = 2;
 
 var vis = d3.select("#timeline").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -62,60 +61,82 @@ var focus = vis.append("g")
 var eventFocused = focus.append('g')
     .attr('class', 'eventFocused')
     .attr('opacity', 0)
-//
-// eventFocused.append('line')
-//     .attr("class", 'down')
-//     .attr("y2", 140)
-//
-// eventFocused.append('line')
-//     .attr("class", 'bottom')
-//     .attr("y1", 140)
-//     .attr("y2", 140)
+
+eventFocused.append('line')
+    .attr("class", 'down')
+    .attr("y2", height + 20)
+
+eventFocused.append('line')
+    .attr("class", 'bottom')
+    .attr("y1", height + 20)
+    .attr("y2", height + 20)
 
 eventFocused.append('text')
     .attr("class", 'date')
-    .attr("y", 130)
+    .attr("y", height + 40)
+    .style('text-anchor', 'middle')
 
+eventFocused.append('text')
+    .attr("class", 'first')
+    .attr("y", height + 60)
+    .style('text-anchor', 'middle')
+
+eventFocused.append('text')
+    .attr("class", 'second')
+    .attr("y", height + 80)
+    .style('fill', 'red')
+    .style('text-anchor', 'middle')
+
+eventFocused.append('text')
+    .attr("class", 'third')
+    .attr("y", height + 100)
+    .style('text-anchor', 'middle')
 
 d3.csv(sourceFile).then(function(dataset) {
-    dataset.forEach(function(d) {
+    dataset.forEach(d => {
         d.date = parseDate(d.d);
-        d.y = parseInt(d.n7);
+        d.yd = parseInt(d.n);
+        d.y = parseInt(d.n7)/7;
     });
 
-
-    var extra = [
-        {d: "2021-01-01", n7: 1000 },
-        {d: "2021-02-01", n7: 3000 }
-    ]
+    var full = Object.assign({}, ...dataset.map((x) => ({[x.date]: x})));
 
     var t_p = 14
 
-    var t_e = dataset[dataset.length - 1]
-    var t_s = dataset[dataset.length - 1 - t_p]
-
+    var t_e = dataset[dataset.length - 2]
+    var t_s = dataset[dataset.length - 2 - t_p]
 
     var t_g = Math.pow(t_e.y/t_s.y, 1/t_p)
 
-    console.log(t_e.date)
 
-    var extra = d3.timeDays(t_s.date, t_e.date.addDays(28)).map((d, i) => {
+
+    var extra = d3.timeDays(t_s.date, t_e.date.addDays(35)).map((d, i) => {
         return {
             date: d,
-            y: t_s.y * Math.pow(t_g, i)
+            p: t_s.y * Math.pow(t_g, i)
         }
     })
 
-    //var startDate = d3.max(dataset, function(d) { return d.date; }
-
-
+    extra.forEach(d => {
+        if (d.date in full) {
+            full[d.date].p = d.p
+        } else {
+            full[d.date] = d
+        }
+    });
 
     // var dates = dataset.map(d => d.date)
     //var bisectDate = d3.bisector(function(d) { return d.date; }).center;
-    var dates = dataset.map(d => d.date)
+
+
+    full = Object.entries(full).map(d => d[1]).sort((a, b) => a.date - b.date)
+    //console.log(full)
+
+    var dates = full.map(d => d.date)
+
 
     //var dataXrange = d3.extent(dataset, function(d) { return d.date; });
-    var dataYrange = d3.extent(dataset, function(d) { return d.y; });
+    var dataYrange = [0, d3.max(dataset, function(d) { return d.yd; })*1.05];
     var dataXrange = [d3.min(dataset, function(d) { return d.date; }), parseDate("2021-06-01")]
 
     var x = d3.scaleTime()
@@ -130,7 +151,6 @@ d3.csv(sourceFile).then(function(dataset) {
 
     var yAxis = d3.axisLeft()
         .scale(y);
-
 
     var x2 = d3.scaleTime()
         .range([0, contextWidth])
@@ -200,23 +220,29 @@ d3.csv(sourceFile).then(function(dataset) {
             gx2.call(xAxis, xz, 'timeMonth', "%b %Y");
         }
 
-        focus.selectAll("circle")
-            .data(dataset)
+        // focus.select("g.weekly").selectAll("circle")
+        //     .data(dataset)
+        //     .attr("cx", function(d) { return xz(d.date); });
+
+        focus.select("g.daily").selectAll("circle")
             .attr("cx", function(d) { return xz(d.date); });
 
         line.datum(dataset)
-            //.attr("fill", "none")
-            //.attr("stroke", 'black')
-            //.attr("stroke-width", 1)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
                 .y(d => y(d.y))
                 .curve(d3.curveMonotoneX))
 
+        lineD.datum(dataset)
+            .attr("d",  d3.line()
+                .x(d => xz(d.date))
+                .y(d => y(d.yd))
+                .curve(d3.curveMonotoneX))
+
         extraLine.datum(extra)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => y(d.y))
+                .y(d => y(d.p))
                 .curve(d3.curveMonotoneX))
 
         focusEvent()
@@ -267,34 +293,45 @@ d3.csv(sourceFile).then(function(dataset) {
             return;
 
         var xc = xScale(d.date);
-        var yc = y(d.y);
-        var s = xc < width/2;
+
+        var yc = y(d.y ? d.y : d.p);
+
 
         eventFocused.datum(d)
-        //
-        // eventFocused.select('.down')
-        //     .attr('x1', xc)
-        //     .attr('x2', xc)
-        //     .attr('y1', yc + circleSize)
+        eventFocused.select('.down')
+            .attr('x1', xc)
+            .attr('x2', xc)
+            .attr('y1', yc)
 
-        eventFocused.select('.date')
-            .attr('dx', (s ? 1 : -1)*8)
-            .style('text-anchor', (s ? 'start' : 'end'))
-        //
-        // eventFocused.select('.bottom')
-        //     .attr('x1', xc - (s ? 1 : -1)*20)
-        //     .attr('x2', xc + (s ? 1 : -1)*80)
+        var size = 100
 
-        // eventFocused.select('.mark')
-        //     .attr('cx', xc)
-        //     .attr('cy', yc)
+        eventFocused.select('.bottom')
+            .attr('x1', xc - size/2)
+            .attr('x2', xc + size/2)
+
 
         eventFocused.select('.date')
             .attr('x', xc)
             .text(formatDate(d.date))
 
-        eventFocused.select('.descriptionText')
-            .html(d.description)
+
+        eventFocused.select('.first')
+            .attr('x', xc)
+            .text(`Mean Count (last 7 days): ${d3.format(".0f")(d.y)}`)
+
+        if (d.p) {
+            eventFocused.select('.second')
+                .attr('x', xc)
+                .text(`Extrapolation: ${d3.format(".0f")(d.p)}`)
+        } else {
+            eventFocused.select('.second')
+                .text('')
+        }
+
+        // eventFocused.select('.third')
+        //     .attr('x', xc)
+        //     .text(`Count: ${d3.format(".0f")(d.yd)}`)
+
 
         eventFocused.style("opacity", .9);
         //
@@ -311,30 +348,36 @@ d3.csv(sourceFile).then(function(dataset) {
         //         .style("opacity", 0);
     }
 
-    focus.append("g").selectAll("circle")
+    focus.append("g")
+        .attr('class', 'daily')
+        .selectAll("circle")
         .data(dataset)
         .enter().append("circle")
-        .attr("r", circleSize)
+        .attr("r", 2)
+        .attr("fill", 'blue')
         .attr("opacity", 0.2)
-        .attr("cx", function(d) { return x(d.date); })
-        .attr("cy", function(d) { return y(d.y); })
-        .on("mouseover", function(e, d) {focusEvent(d)})
-        .on("mouseout", defocusEvent);
+        .attr("cy", function(d) { return y(d.yd); })
 
     focus.append("g")
         .attr("class", "y axis")
-       	//.attr("transform", "translate(" + (width) + ", 0)")
         .call(yAxis)
         .call(g => g.select(".domain").remove())
 
-    context.append("g").selectAll("circle")
-        .data(dataset)
-        .enter().append("circle")
-        .attr("r", 1.5)
-        .attr("cx", function(d) { return x2(d.date); })
-        .attr("cy", function(d) { return y2(d.y); })
-        .attr("opacity", 0.2)
-        //.attr("fill", function(d) { return c(d.form); })
+    focus.append("g")
+        .attr("class", "y grid")
+        .call(d3.axisLeft()
+            .scale(y).tickSize(-width).tickFormat(''))
+
+    context.append("path")
+        .attr('class', 'line')
+        .datum(dataset)
+        .attr("fill", "none")
+        .attr("stroke", 'black')
+        .attr("stroke-width", 1)
+        .attr("d",  d3.line()
+            .x(d => x2(d.date))
+            .y(d => y2(d.y)))
+
 
     context.append("g")
 
@@ -343,6 +386,13 @@ d3.csv(sourceFile).then(function(dataset) {
         .attr("fill", "none")
         .attr("class", "line")
         .attr("stroke", 'black')
+        .attr("stroke-width", 1)
+
+    var lineD = focus.append("path")
+        .attr("fill", "none")
+        .attr("class", "lined")
+        .attr("opacity", 0.3)
+        .attr("stroke", 'blue')
         .attr("stroke-width", 1)
 
     var extraLine = focus.append("path")
@@ -358,9 +408,7 @@ d3.csv(sourceFile).then(function(dataset) {
 
     context.append("g")
         .attr("class", "x2 axis")
-       	//.attr("transform", "translate(" + (width) + ", 0)")
         .call(d3.axisBottom(x2).tickValues([]).tickSizeOuter(0))
-
 
     context.append("g")
         .attr("class", "x brush")
@@ -368,15 +416,12 @@ d3.csv(sourceFile).then(function(dataset) {
 
     rect.call(zoom).on("mousemove", function(e) {
         var d = xScale.invert(e.offsetX - margin.left)
-        //console.log(e.offsetX)
         //console.log(d)
         var dsi = d3.bisectCenter(dates, d)
-        focusEvent(dataset[dsi])
-        //console.log(dataset[dsi])
-        //console.log(e)
+        focusEvent(full[dsi])
     });
 
-    brush.move(context.select('.brush'), [x2(parseDate('2021-01-01')), x2(parseDate('2021-04-01'))])
+    brush.move(context.select('.brush'), [x2(parseDate('2020-10-01')), x2(parseDate('2021-04-01'))])
 
     focusEvent(dataset[50])
 });
