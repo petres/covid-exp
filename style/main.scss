@@ -1,0 +1,62 @@
+body {
+	//padding: 20px;
+    margin: auto;
+    width: 1200px;
+    font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
+}
+
+#timeline {
+    text {
+        font-size: 14px;
+    }
+
+    rect.pane {
+    	cursor: move;
+    	fill: none;
+    	pointer-events: all;
+    }
+
+    .x.axis {
+        &.timeYear {
+            text {
+                font-size: 11px;
+                font-weight: bold;
+            }
+            line {
+            	opacity: 0.5;
+            }
+        }
+        &.timeMonth {
+            text {
+                font-size: 12px;
+            }
+            line {
+            	opacity: 0.1;
+            }
+        }
+    }
+
+    .eventFocused {
+        line {
+            stroke: black;
+            stroke-width: 1;
+        }
+        text {
+            font-size: 12px;
+        }
+        .date {
+            font-weight: bold;
+        }
+    }
+}
+
+
+#context {
+    position: relative;
+    float: right;
+    width: 500px;
+    .x2.axis line {
+    	stroke: black;
+    	opacity: 0.2;
+    }
+}
