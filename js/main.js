@@ -60,16 +60,15 @@ var focus = vis.append("g")
 
 var eventFocused = focus.append('g')
     .attr('class', 'eventFocused')
-    .attr('opacity', 0)
 
 eventFocused.append('line')
     .attr("class", 'down')
-    .attr("y2", height + 20)
+    .attr("y2", height + 23)
 
 eventFocused.append('line')
     .attr("class", 'bottom')
-    .attr("y1", height + 20)
-    .attr("y2", height + 20)
+    .attr("y1", height + 23)
+    .attr("y2", height + 23)
 
 eventFocused.append('text')
     .attr("class", 'date')
@@ -92,6 +91,33 @@ eventFocused.append('text')
     .attr("y", height + 100)
     .style('text-anchor', 'middle')
 
+
+var approx = focus.append('g')
+    .attr('class', 'approx')
+
+approx.append('line')
+    .attr("class", 'down start')
+    .attr("y1", 0)
+    .attr("y2", height)
+
+approx.append('line')
+    .attr("class", 'down end')
+    .attr("y1", 0)
+    .attr("y2", height)
+
+
+const handle_start = approx.append('line')
+    .attr("class", 'handle start')
+    .attr("y1", height)
+    .attr("y2", height + 10)
+
+approx.append('line')
+    .attr("class", 'handle end')
+    .attr("y1", height)
+    .attr("y2", height + 10)
+
+
+
 d3.csv(sourceFile).then(function(dataset) {
     dataset.forEach(d => {
         d.date = parseDate(d.d);
@@ -101,16 +127,17 @@ d3.csv(sourceFile).then(function(dataset) {
 
     var full = Object.assign({}, ...dataset.map((x) => ({[x.date]: x})));
 
-    var t_p = 14
+    var t_p = 17
+    var t_o = 2
 
-    var t_e = dataset[dataset.length - 2]
-    var t_s = dataset[dataset.length - 2 - t_p]
+    var t_e = dataset[dataset.length - 1 - t_o]
+    var t_s = dataset[dataset.length - 1 - t_o - t_p]
 
     var t_g = Math.pow(t_e.y/t_s.y, 1/t_p)
 
 
 
-    var extra = d3.timeDays(t_s.date, t_e.date.addDays(35)).map((d, i) => {
+    var extra = d3.timeDays(t_s.date, t_e.date.addDays(49)).map((d, i) => {
         return {
             date: d,
             p: t_s.y * Math.pow(t_g, i)
@@ -245,6 +272,21 @@ d3.csv(sourceFile).then(function(dataset) {
                 .y(d => y(d.p))
                 .curve(d3.curveMonotoneX))
 
+
+        approx.select('.down.start')
+            .attr('x1', xz(t_s.date))
+            .attr('x2', xz(t_s.date))
+        approx.select('.handle.start')
+            .attr('x1', xz(t_s.date))
+            .attr('x2', xz(t_s.date))
+
+        approx.select('.down.end')
+            .attr('x1', xz(t_e.date))
+            .attr('x2', xz(t_e.date))
+        approx.select('.handle.end')
+            .attr('x1', xz(t_e.date))
+            .attr('x2', xz(t_e.date))
+
         focusEvent()
     }
 
@@ -320,9 +362,10 @@ d3.csv(sourceFile).then(function(dataset) {
             .text(`Mean Count (last 7 days): ${d3.format(".0f")(d.y)}`)
 
         if (d.p) {
+            var text = d.y ? 'Interpolation' : 'Extrapolation';
             eventFocused.select('.second')
                 .attr('x', xc)
-                .text(`Extrapolation: ${d3.format(".0f")(d.p)}`)
+                .text(`${text}: ${d3.format(".0f")(d.p)}`)
         } else {
             eventFocused.select('.second')
                 .text('')
@@ -421,7 +464,10 @@ d3.csv(sourceFile).then(function(dataset) {
         focusEvent(full[dsi])
     });
 
-    brush.move(context.select('.brush'), [x2(parseDate('2020-10-01')), x2(parseDate('2021-04-01'))])
 
-    focusEvent(dataset[50])
+    handle_start.on('click', e => {console.log('clicked')})
+
+    brush.move(context.select('.brush'), [x2(parseDate('2020-09-01')), x2(parseDate('2021-05-01'))])
+
+    focusEvent(full[full.length - 49])
 });

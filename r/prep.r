@@ -16,6 +16,8 @@ d = d.raw[, .(
 
 d[, n7 := cumsum(n) - shift(cumsum(n), 7, fill = 0)]
 
+l = nrow(d)
+d[l, ]
 
 ggplot(d, aes(x = d, y = n7)) + geom_line()
 

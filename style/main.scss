@@ -43,13 +43,33 @@ body {
     .eventFocused {
         line {
             stroke: black;
-            stroke-width: 1;
+            opacity: 0.8;
+            stroke-width: 1.4;
         }
         text {
             font-size: 12px;
         }
         .date {
             font-weight: bold;
+        }
+    }
+
+    .approx {
+        line.down {
+            stroke-dasharray: 10, 10;
+            stroke: red;
+            opacity: 0.5;
+            stroke-width: 1;
+        }
+
+        line.handle {
+            stroke: red;
+            opacity: 0.8;
+            stroke-width: 8;
+
+            &.start {
+                cursor: col-resize;
+            }
         }
     }
 }
