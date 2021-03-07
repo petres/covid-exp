@@ -21,7 +21,7 @@ var margin	= {top: 40, right: 40, bottom: 160, left: 80},
     width	= svgWidth - margin.left - margin.right,
     height	= svgHeight - margin.top - margin.bottom;
 
-var contextMargin = {top: 40, right: 40, bottom: 20, left: 40},
+var contextMargin = {top: 0, right: 40, bottom: 20, left: 20},
     contextWidth = 500 - contextMargin.left - contextMargin.right,
     contextHeight = 40;
 
@@ -57,14 +57,6 @@ var rect = vis.append("rect")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
 
-// focus.append("rect")
-//     .attr("class", "op")
-//     .attr("width", margin.left)
-//     .attr("height", height)
-//     .attr("fill", 'white')
-//     .attr("opacity", 0.5)
-//     .attr("transform", `translate(-${margin.left}, 0)`);
-
 const lines = focus.append("g")
     .attr("class", "lines")
 
@@ -83,12 +75,15 @@ const pointsDay = lines.append("g")
 
 /* Day Selection Elements */
 
+var labelPosOffsetBottom = height +  33;
+var labelLineHeight = 15;
+
 var dayFocused = focus.append('g')
     .attr('class', 'dayFocused')
 
 dayFocused.append('line')
     .attr("class", 'down')
-    .attr("y2", height + 23)
+    .attr("y2", labelPosOffsetBottom)
 
 dayFocused.append('line')
     .attr("class", 'mean')
@@ -97,20 +92,20 @@ dayFocused.append('line')
 
 dayFocused.append('line')
     .attr("class", 'bottom')
-    .attr("y1", height + 23)
-    .attr("y2", height + 23)
+    .attr("y1", labelPosOffsetBottom)
+    .attr("y2", labelPosOffsetBottom)
 
 dayFocused.append('text')
     .attr("class", 'date')
-    .attr("y", height + 40)
+    .attr("y", labelPosOffsetBottom + labelLineHeight)
 
 dayFocused.append('text')
     .attr("class", 'first')
-    .attr("y", height + 60)
+    .attr("y", labelPosOffsetBottom + labelLineHeight*2)
 
 dayFocused.append('text')
     .attr("class", 'second')
-    .attr("y", height + 80)
+    .attr("y", labelPosOffsetBottom + labelLineHeight*3)
 
 /* --- */
 
@@ -141,7 +136,6 @@ approx.append('line')
     .attr("y2", height + 10)
 
 /* --- */
-
 
 d3.csv(sourceFile).then(function(rawData) {
     const baseData = rawData.map(d => {
@@ -208,20 +202,23 @@ d3.csv(sourceFile).then(function(rawData) {
     calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //var dataXrange = d3.extent(baseData, function(d) { return d.date; });
-    var dataYrange = [1, d3.max(baseData, function(d) { return d.yd; })*1.05];
+    var highestValue = d3.max(baseData, function(d) { return d.yd; });
     var dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays*2)]
 
     var x = d3.scaleTime()
         .range([0, width])
         .domain(dataXrange);
 
-    var y = d3.scaleLog()
-        .range([height, 0])
-        .domain(dataYrange);
+    var yScales = {
+        linear: d3.scaleLinear()
+            .range([height, 0])
+            .domain([0, highestValue * 1.05]),
+        log: d3.scaleLog()
+            .range([height, 0])
+            .domain([1, highestValue * 1.2])
+    }
 
-    var yAxis = d3.axisLeft()
-        .ticks(8)
-        .scale(y);
+    var yScale = yScales.linear;
 
     var x2 = d3.scaleTime()
         .range([0, contextWidth])
@@ -229,22 +226,12 @@ d3.csv(sourceFile).then(function(rawData) {
 
     var y2 = d3.scaleLinear()
         .range([contextHeight, 0])
-        .domain(y.domain());
+        .domain([0, highestValue * 1.05]);
 
     var x2Axis = d3.axisBottom()
         .tickSize(-contextHeight)
         .scale(x2)
         .ticks(8)
-
-    focus.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-        .call(g => g.select(".domain").remove())
-
-    focus.append("g")
-        .attr("class", "y grid")
-        .call(d3.axisLeft()
-            .scale(y).tickSize(-width).tickFormat(''))
 
     const xAxis = (g, x, name, format = null, padding = 4) => g
         .attr("class", `x axis ${name}`)
@@ -300,19 +287,19 @@ d3.csv(sourceFile).then(function(rawData) {
         lineMean.datum(baseData)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => y(d.y))
+                .y(d => yScale(d.y))
                 .curve(d3.curveMonotoneX))
 
         lineDay.datum(baseData)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => y(d.yd))
+                .y(d => yScale(d.yd))
                 .curve(d3.curveMonotoneX))
 
         lineMeanF.datum(extra)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => y(d.f))
+                .y(d => yScale(d.f))
                 .curve(d3.curveMonotoneX))
 
         let approxStartX = xz(approxStart);
@@ -369,7 +356,7 @@ d3.csv(sourceFile).then(function(rawData) {
             return;
 
         var xc = xScale(d.date);
-        var yc = y(d.v);
+        var yc = yScale(d.v);
 
         dayFocused.datum(d)
         dayFocused.select('.down')
@@ -416,11 +403,12 @@ d3.csv(sourceFile).then(function(rawData) {
         }
     }
 
+
     pointsDay
         .selectAll("circle")
         .data(baseData)
         .enter().append("circle")
-        .attr("cy", function(d) { return y(d.yd); })
+        .attr("cy", function(d) { return yScale(d.yd); })
 
     context.append("path")
         .attr('class', 'line')
@@ -460,6 +448,40 @@ d3.csv(sourceFile).then(function(rawData) {
     handleStart
         .on('click', event => { if (event.defaultPrevented) return; })
         .call(d3.drag().on("drag", dragged));
+
+
+    const yAxis = (g, y) => g
+        .attr("class", "y axis")
+        .call(d3.axisLeft()
+            .ticks(5)
+            .scale(y))
+            //.tickFormat(d3.format(",.0f")))
+    //    .call(g => g.select(".domain").remove())
+
+    const yGrid = (g, y) => g
+        .attr("class", "y grid")
+        .call(d3.axisLeft()
+            .scale(y)
+            .ticks(5)
+            .tickSize(-width)
+            .tickFormat(''))
+    //    .call(g => g.select(".domain").remove())
+
+    const gya = focus.append("g")
+    const gyg = focus.append("g")
+
+    gya.call(yAxis, yScale)
+    gyg.call(yGrid, yScale)
+
+    d3.selectAll("#buttons input").on("change", event => {
+        yScale = yScales[event.target.value];
+        pointsDay
+            .selectAll("circle")
+            .attr("cy", function(d) { return yScale(d.yd); });
+        gya.call(yAxis, yScale)
+        gyg.call(yGrid, yScale)
+        redraw(xScale);
+    });
 
     // init with view params
     brush.move(context.select('.brush'), [x2(parseDate('2020-10-20')), x2(approxEnd.addDays(forecastDays))])

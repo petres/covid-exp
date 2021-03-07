@@ -5,7 +5,19 @@
         <title>Covid19 Extrapolation</title>
     </head>
     <body>
-        <div id="context"></div>
+        <div id="controls">
+            <div id="context"></div>
+            <div id="buttons">
+                <div>
+                    <input type="radio" name="scale" value="linear" checked>
+                    <label for="linear">Linear</label>
+                </div>
+                <div>
+                    <input type="radio" name="scale" value="log">
+                    <label for="log">Log</label>
+                </div>
+            </div>
+        </div>
         <div id="timeline"></div>
     </body>
 </html>

@@ -1,6 +1,6 @@
 body {
 	//padding: 20px;
-    margin: auto;
+    margin: 40px auto;
     width: 1200px;
     font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
 }
@@ -13,6 +13,20 @@ path {
 
 line {
     stroke-width: 1;
+}
+
+#controls {
+    position: relative;
+}
+
+#buttons {
+    float: right;
+    width: 100px;
+}
+
+#context {
+    float: right;
+    width: 500px;
 }
 
 #timeline {
@@ -83,10 +97,11 @@ line {
             &.handle {
                 stroke: red;
                 opacity: 0.8;
-                stroke-width: 8;
+                stroke-width: 3;
 
                 &.start {
                     cursor: col-resize;
+                    stroke-width: 7;
                 }
             }
         }
@@ -113,10 +128,6 @@ line {
 }
 
 #context {
-    position: relative;
-    float: right;
-    width: 500px;
-
     rect.selection {
         fill-opacity: 0.08;
         fill: blue;
