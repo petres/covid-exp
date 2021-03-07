@@ -21,10 +21,12 @@ var contextMargin = {top: 40, right: 40, bottom: 20, left: 40},
     contextWidth = 500 - contextMargin.left - contextMargin.right,
     contextHeight = 40;
 
-
-
 var formatDate = d3.timeFormat("%a, %d. %b %Y")
 var parseDate = d3.timeParse("%Y-%m-%d")
+
+var forecastDays = 49;
+var approxDays = 17;
+var approxLag = 2;
 
 
 var vis = d3.select("#timeline").append("svg")
@@ -121,7 +123,7 @@ approx.append('line')
     .attr("y1", 0)
     .attr("y2", height)
 
-const handle_start = approx.append('line')
+const handleStart = approx.append('line')
     .attr("class", 'handle start')
     .attr("y1", height)
     .attr("y2", height + 10)
@@ -144,18 +146,13 @@ d3.csv(sourceFile).then(function(dataset) {
 
     var full = Object.assign({}, ...dataset.map((x) => ({[x.date]: x})));
 
-    var t_p = 17
-    var t_o = 2
+    var approxEnd = dataset[dataset.length - 1 - approxLag].date
+    var approxStart = dataset[dataset.length - 1 - approxLag - approxDays].date
 
-    var t_e = dataset[dataset.length - 1 - t_o]
-    var t_s = dataset[dataset.length - 1 - t_o - t_p]
+    var approxR = Math.pow(full[approxEnd].y/full[approxStart].y, 1/approxDays)
 
-    var t_g = Math.pow(t_e.y/t_s.y, 1/t_p)
-
-
-
-    var extra = d3.timeDays(t_s.date, t_e.date.addDays(49)).map((d, i) => {
-        let v = t_s.y * Math.pow(t_g, i)
+    var extra = d3.timeDays(approxStart, approxEnd.addDays(forecastDays)).map((d, i) => {
+        let v = full[approxStart].y * Math.pow(approxR, i)
         return {
             date: d,
             p: v,
@@ -177,10 +174,10 @@ d3.csv(sourceFile).then(function(dataset) {
     //console.log(full)
 
     var dates = full.map(d => d.date)
-    
+
     //var dataXrange = d3.extent(dataset, function(d) { return d.date; });
     var dataYrange = [0, d3.max(dataset, function(d) { return d.yd; })*1.05];
-    var dataXrange = [d3.min(dataset, function(d) { return d.date; }), parseDate("2021-05-01")]
+    var dataXrange = [d3.min(dataset, function(d) { return d.date; }), approxEnd.addDays(forecastDays)]
 
     var x = d3.scaleTime()
         .range([0, width])
@@ -239,15 +236,10 @@ d3.csv(sourceFile).then(function(dataset) {
         xScale = xz;
         var days = (xz.invert(width) - xz.invert(0))/(1000 * 60 * 60 * 24)
 
-        gx1.attr('opacity', 0)
-        gx2.attr('opacity', 0)
+        //gx1.attr('opacity', 0)
+        //gx2.attr('opacity', 0)
 
-        if (days > 1000) {
-            gx1.call(xAxis, xz, 'timeYear');
-        } else if (days > 700) {
-            gx1.call(xAxis, xz, 'timeYear');
-            gx2.call(xAxis, xz, 'timeMonth', "");
-        } else if (days > 400) {
+        if (days > 400) {
             gx1.call(xAxis, xz, 'timeYear', null, 16);
             gx2.call(xAxis, xz, 'timeMonth', "%b");
         } else {
@@ -276,13 +268,16 @@ d3.csv(sourceFile).then(function(dataset) {
                 .y(d => y(d.p))
                 .curve(d3.curveMonotoneX))
 
+        let approxStartX = xz(approxStart);
+        let approxEndX = xz(approxEnd);
+
         approx.selectAll('.start')
-            .attr('x1', xz(t_s.date))
-            .attr('x2', xz(t_s.date))
+            .attr('x1', approxStartX)
+            .attr('x2', approxStartX)
 
         approx.selectAll('.end')
-            .attr('x1', xz(t_e.date))
-            .attr('x2', xz(t_e.date))
+            .attr('x1', approxEndX)
+            .attr('x2', approxEndX)
 
         focusEvent()
     }
@@ -352,7 +347,7 @@ d3.csv(sourceFile).then(function(dataset) {
             return (lower[i] == higher[i+1] && e != d.date);
         })
 
-        console.log(ddd.map(d => formatDate(d)))
+        console.log(ddd.map(d => d3.timeFormat("%Y-%m-%d")(d)))
 
         dayFocused.select('.date')
             .attr('x', xc)
@@ -409,17 +404,31 @@ d3.csv(sourceFile).then(function(dataset) {
         .attr("class", "x brush")
         .call(brush)
 
-    rect.call(zoom).on("mousemove", function(e) {
-        var d = xScale.invert(e.offsetX - margin.left)
+    rect.call(zoom).on("mousemove", function(event) {
+        // var d = xScale.invert(event.x)
+        var d = xScale.invert(event.offsetX - margin.left)
         //console.log(d)
         var dsi = d3.bisectCenter(dates, d)
         focusEvent(full[dsi])
     });
 
-    // todo
-    handle_start.on('click', e => {console.log('clicked')})
+    function updateApprox(date) {
+        approx.selectAll('.start')
+            .attr('x1', xScale(date))
+            .attr('x2', xScale(date))
+    }
+
+    function dragged(event, d) {
+        var dsi = d3.bisectCenter(dates, xScale.invert(event.x))
+        updateApprox(dates[dsi])
+        //d3.select(this).raise().attr("cx", d.x = event.x).attr("cy", d.y = event.y);
+    }
+
+    handleStart
+        .on('click', event => { if (event.defaultPrevented) return; })
+        .call(d3.drag().on("drag", dragged));
 
     // init with view params
-    brush.move(context.select('.brush'), [x2(parseDate('2020-10-20')), x2(parseDate('2021-05-01'))])
-    focusEvent(full[full.length - 49])
+    brush.move(context.select('.brush'), [x2(parseDate('2020-10-20')), x2(approxEnd.addDays(forecastDays))])
+    focusEvent(full[full.length - forecastDays])
 });

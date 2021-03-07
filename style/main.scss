@@ -107,8 +107,9 @@ line {
             &.line-mean {
                 stroke: blue;
             }
-            &.line-mean-fc {
+            &.line-mean-f {
                 stroke: red;
+                stroke-width: 1.5;
             }
         }
 
