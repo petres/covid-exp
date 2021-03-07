@@ -9,6 +9,10 @@ Date.prototype.addDays = function(days) {
     return date;
 }
 
+Date.prototype.diffDays = function(date) {
+    return Math.ceil((this - date) / (1000 * 60 * 60 * 24))
+}
+
 
 var svgWidth  = 1200;
 var svgHeight = 700;
@@ -23,6 +27,7 @@ var contextMargin = {top: 40, right: 40, bottom: 20, left: 40},
 
 var formatDate = d3.timeFormat("%a, %d. %b %Y")
 var parseDate = d3.timeParse("%Y-%m-%d")
+
 
 var forecastDays = 40;
 var approxDays = 17;
@@ -40,15 +45,17 @@ var context = d3.select("#context").append("svg")
     .attr("class", "context")
     .attr("transform", `translate(${contextMargin.left}, ${contextMargin.top})`)
 
+var focus = vis.append("g")
+    .attr("class", "focus")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`)
+
+
 var rect = vis.append("rect")
     .attr("class", "pane")
     .attr("width", width)
     .attr("height", height)
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
-var focus = vis.append("g")
-    .attr("class", "focus")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
 // focus.append("rect")
 //     .attr("class", "op")
@@ -136,71 +143,84 @@ approx.append('line')
 /* --- */
 
 
-d3.csv(sourceFile).then(function(baseData) {
-    baseData.forEach(d => {
-        d.date = parseDate(d.d);
-        d.yd = parseInt(d.n);
-        d.y = parseInt(d.n7)/7;
-        d.v = d.y
+d3.csv(sourceFile).then(function(rawData) {
+    const baseData = rawData.map(d => {
+        return {
+            date: parseDate(d.d),
+            yd: parseInt(d.n),
+            y: parseInt(d.n7)/7,
+            v: parseInt(d.n7)/7,
+        }
     });
 
-    var baseDataDict = Object.assign({}, ...baseData.map((x) => ({[x.date]: x})));
+    const extEnd = baseData[baseData.length - 1].date.addDays(forecastDays)
 
-    var calcApprox = function(start) {
+    const dates = d3.timeDays(baseData[0].date, extEnd)
+    const d2i = Object.assign({}, ...dates.map((x, i) => ({[x]: i})));
 
-        approxEnd = baseData[baseData.length - 1 - approxLag].date
-        var days = Math.ceil((approxEnd - start) / (1000 * 60 * 60 * 24))
+    var calcApprox = function(start = null, end = null) {
+        start = start ? start : approxStart;
+        end = end ? end : approxEnd;
 
-        if (days < 1)
+        var countDays = d3.timeDays(start, end).length;
+        if (countDays < 1)
             return;
 
         approxStart = start;
+        approxEnd = end;
 
-        var approxR = Math.pow(baseDataDict[approxEnd].y/baseDataDict[approxStart].y, 1/days)
+        var valueStart = baseData[d2i[approxStart]].y;
+        var valueEnd = baseData[d2i[approxEnd]].y;
 
-        extra = d3.timeDays(approxStart, approxEnd.addDays(forecastDays)).map((d, i) => {
-            let v = baseDataDict[approxStart].y * Math.pow(approxR, i)
-            return {
-                date: d,
-                p: v,
-                v: v
-            }
-        })
+        var approxR = Math.pow(valueEnd/valueStart, 1/countDays)
 
-        extra.forEach(d => {
-            if (d.date in baseDataDict) {
-                baseDataDict[d.date].p = d.p
+        // Create right data format for lines
+        extData = baseData.map(a => ({...a}));
+        extra = [];
+        var approxRp = 1
+        d3.timeDays(approxStart, extEnd).forEach(date => {
+            let i = d2i[date];
+            let entry = null
+            let forecast = valueStart * approxRp;
+            if (i >= extData.length) {
+                entry = {
+                    date: date,
+                    f: forecast,
+                    v: forecast,
+                };
             } else {
-                baseDataDict[d.date] = d
+                entry = extData[i]
+                entry.f = forecast;
             }
-        });
 
-        extData = Object.entries(baseDataDict).map(d => d[1]).sort((a, b) => a.date - b.date)
-        dates = extData.map(d => d.date)
+            extData[i] = entry;
+            extra.push(entry);
+
+            approxRp = approxRp*approxR;
+        })
     }
 
     var approxEnd = null;
     var approxStart = null;
     var extra = null;
     var extData = null;
-    var dates = null;
 
-    calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date)
-
+    calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //var dataXrange = d3.extent(baseData, function(d) { return d.date; });
-    var dataYrange = [0, d3.max(baseData, function(d) { return d.yd; })*1.05];
+    var dataYrange = [1, d3.max(baseData, function(d) { return d.yd; })*1.05];
     var dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays*2)]
 
     var x = d3.scaleTime()
         .range([0, width])
         .domain(dataXrange);
 
-    var y = d3.scaleLinear()
+    var y = d3.scaleLog()
         .range([height, 0])
         .domain(dataYrange);
 
     var yAxis = d3.axisLeft()
+        .ticks(8)
         .scale(y);
 
     var x2 = d3.scaleTime()
@@ -215,6 +235,16 @@ d3.csv(sourceFile).then(function(baseData) {
         .tickSize(-contextHeight)
         .scale(x2)
         .ticks(8)
+
+    focus.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
+        .call(g => g.select(".domain").remove())
+
+    focus.append("g")
+        .attr("class", "y grid")
+        .call(d3.axisLeft()
+            .scale(y).tickSize(-width).tickFormat(''))
 
     const xAxis = (g, x, name, format = null, padding = 4) => g
         .attr("class", `x axis ${name}`)
@@ -282,7 +312,7 @@ d3.csv(sourceFile).then(function(baseData) {
         lineMeanF.datum(extra)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => y(d.p))
+                .y(d => y(d.f))
                 .curve(d3.curveMonotoneX))
 
         let approxStartX = xz(approxStart);
@@ -357,14 +387,16 @@ d3.csv(sourceFile).then(function(baseData) {
             .attr('y1', yc)
             .attr('y2', yc)
 
-        let lower = extData.map(t => t.v <= d.v);
-        let higher = extData.map(t => t.v > d.v);
+        if (false) {
+            let lower = extData.map(t => t.v <= d.v);
+            let higher = extData.map(t => t.v > d.v);
 
-        let ddd = dates.slice(0, -1).filter((e, i) => {
-            return (lower[i] == higher[i+1] && e != d.date);
-        })
+            let ddd = dates.slice(0, -1).filter((e, i) => {
+                return (lower[i] == higher[i+1] && e != d.date);
+            })
 
-        console.log(ddd.map(d => d3.timeFormat("%Y-%m-%d")(d)))
+            console.log(ddd.map(d => d3.timeFormat("%Y-%m-%d")(d)))
+        }
 
         dayFocused.select('.date')
             .attr('x', xc)
@@ -374,11 +406,10 @@ d3.csv(sourceFile).then(function(baseData) {
             .attr('x', xc)
             .text(`Mean Count (last 7 days): ${d3.format(".0f")(d.y)}`)
 
-        if (d.p) {
-            var text = d.y ? 'Interpolation' : 'Extrapolation';
+        if (d.f) {
             dayFocused.select('.second')
                 .attr('x', xc)
-                .text(`${text}: ${d3.format(".0f")(d.p)}`)
+                .text(`Approximtion: ${d3.format(".0f")(d.f)}`)
         } else {
             dayFocused.select('.second')
                 .text('')
@@ -390,16 +421,6 @@ d3.csv(sourceFile).then(function(baseData) {
         .data(baseData)
         .enter().append("circle")
         .attr("cy", function(d) { return y(d.yd); })
-
-    focus.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-        .call(g => g.select(".domain").remove())
-
-    focus.append("g")
-        .attr("class", "y grid")
-        .call(d3.axisLeft()
-            .scale(y).tickSize(-width).tickFormat(''))
 
     context.append("path")
         .attr('class', 'line')
@@ -426,6 +447,7 @@ d3.csv(sourceFile).then(function(baseData) {
         var d = xScale.invert(event.offsetX - margin.left)
         //console.log(d)
         var dsi = d3.bisectCenter(dates, d)
+        // console.log(extData[dsi])
         focusEvent(extData[dsi])
     });
 
