@@ -5,6 +5,16 @@ body {
     font-family: Century Gothic, CenturyGothic, AppleGothic, sans-serif;
 }
 
+path {
+    fill: none;
+    stroke: black;
+    stroke-width: 1;
+}
+
+line {
+    stroke-width: 1;
+}
+
 #timeline {
     text {
         font-size: 14px;
@@ -40,13 +50,9 @@ body {
         opacity: 0.1;
     }
 
-    g.daily circle {
-        opacity: 0.2;
-        fill: black;
-        r: 2;
-    }
 
-    .eventFocused {
+
+    .dayFocused {
         line {
             stroke: black;
             opacity: 0.8;
@@ -58,6 +64,13 @@ body {
         }
         text {
             font-size: 12px;
+            text-anchor: middle;
+            &.first {
+
+            }
+            &.second {
+                fill: red;
+            }
         }
         .date {
             font-weight: bold;
@@ -65,36 +78,47 @@ body {
     }
 
     .approx {
-        line.down {
-            stroke-dasharray: 10, 10;
-            stroke: red;
-            opacity: 0.5;
-            stroke-width: 1;
-        }
+        line {
+            &.down {
+                stroke-dasharray: 10, 10;
+                stroke: red;
+                opacity: 0.5;
+                stroke-width: 1;
+            }
+            &.handle {
+                stroke: red;
+                opacity: 0.8;
+                stroke-width: 8;
 
-        line.handle {
-            stroke: red;
-            opacity: 0.8;
-            stroke-width: 8;
-
-            &.start {
-                cursor: col-resize;
+                &.start {
+                    cursor: col-resize;
+                }
             }
         }
     }
 
-    path.lined {
-        opacity: 0.3;
-        stroke: green;
-        stroke-width: 1;
-    }
-    path.line {
-        opacity: 1;
-        stroke: blue;
-        stroke-width: 1;
+    .lines {
+        path {
+            opacity: 1;
+            &.line-day {
+                opacity: 0.3;
+                stroke: green;
+            }
+            &.line-mean {
+                stroke: blue;
+            }
+            &.line-mean-fc {
+                stroke: red;
+            }
+        }
+
+        .points-day circle {
+            opacity: 0.2;
+            fill: black;
+            r: 2;
+        }
     }
 }
-
 
 #context {
     position: relative;
@@ -106,18 +130,18 @@ body {
         fill: blue;
     }
 
-    .x2.axis line {
-    	stroke: black;
-    	opacity: 0.2;
-    }
-
-    .x2.axis path {
-        stroke: black;
-        opacity: 0.1;
+    .x2.axis {
+        line {
+        	stroke: black;
+        	opacity: 0.2;
+        }
+        path {
+            stroke: black;
+            opacity: 0.1;
+        }
     }
 
     path.line {
-        fill: none;
         stroke: blue;
         stroke-width: 1;
     }

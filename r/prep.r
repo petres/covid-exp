@@ -6,10 +6,7 @@ d.raw = fread(
     'https://covid19-dashboard.ages.at/data/CovidFaelle_Timeline.csv'
 )
 
-
-d.raw = d.raw[Bundesland == 'Österreich']
-
-d = d.raw[, .(
+d = d.raw[Bundesland == 'Österreich', .(
     d = as.Date(Time, format="%d.%m.%Y"),
     n = AnzahlFaelle
 )]
