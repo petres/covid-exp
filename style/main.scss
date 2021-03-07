@@ -16,10 +16,6 @@ line {
 }
 
 #timeline {
-    text {
-        font-size: 14px;
-    }
-
     rect.pane {
     	cursor: move;
     	fill: none;
@@ -29,7 +25,7 @@ line {
     .x.axis {
         &.timeYear {
             text {
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: bold;
             }
             line {
@@ -38,7 +34,7 @@ line {
         }
         &.timeMonth {
             text {
-                font-size: 12px;
+                font-size: 11px;
             }
             line {
             	opacity: 0.3;
@@ -50,16 +46,15 @@ line {
         opacity: 0.1;
     }
 
-
-
     .dayFocused {
         line {
             stroke: black;
             opacity: 0.8;
             stroke-width: 1.4;
             &.mean {
-                stroke-dasharray: 10, 10;
+                stroke-dasharray: 10, 8;
                 opacity: 0.6;
+                stroke-width: 0.5;
             }
         }
         text {
@@ -80,7 +75,7 @@ line {
     .approx {
         line {
             &.down {
-                stroke-dasharray: 10, 10;
+                stroke-dasharray: 10, 8;
                 stroke: red;
                 opacity: 0.5;
                 stroke-width: 1;
@@ -98,24 +93,20 @@ line {
     }
 
     .lines {
-        path {
-            opacity: 1;
-            &.line-day {
-                opacity: 0.3;
-                stroke: green;
-            }
-            &.line-mean {
-                stroke: blue;
-            }
-            &.line-mean-f {
-                stroke: red;
-                stroke-width: 1.5;
-            }
-        }
-
-        .points-day circle {
+        .line-day {
             opacity: 0.2;
-            fill: black;
+            stroke: green;
+        }
+        .line-mean {
+            stroke: blue;
+        }
+        .line-mean-f {
+            stroke: red;
+            stroke-width: 1.5;
+        }
+        .points-day circle {
+            opacity: 0.1;
+            fill: green;
             r: 2;
         }
     }
