@@ -57,6 +57,27 @@ var rect = vis.append("rect")
     .attr("transform", `translate(${margin.left}, ${margin.top})`)
 
 
+/* --- */
+
+
+/* Axis */
+const gx1 = focus.append("g")
+    .attr("class", "x axis")
+
+const gx2 = focus.append("g")
+    .attr("class", "x axis")
+
+const gya = focus.append("g")
+    .attr("class", "y axis")
+
+const gyg = focus.append("g")
+    .attr("class", "y grid")
+
+/* --- */
+
+
+/* Data Rows */
+
 const lines = focus.append("g")
     .attr("class", "lines")
 
@@ -72,11 +93,14 @@ const lineMeanF = lines.append("path")
 const pointsDay = lines.append("g")
     .attr('class', 'points-day')
 
+/* --- */
+
 
 /* Day Selection Elements */
 
 var labelPosOffsetBottom = height +  33;
 var labelLineHeight = 15;
+var labelWidth = 50;
 
 var dayFocused = focus.append('g')
     .attr('class', 'dayFocused')
@@ -241,8 +265,7 @@ d3.csv(sourceFile).then(function(rawData) {
     var xScale = x;
 
     // focus x axis labels
-    const gx1 = focus.append("g")
-    const gx2 = focus.append("g")
+
 
     var ignoreBrushEvent = false;
     var ignoreZoomEvent = false;
@@ -364,17 +387,15 @@ d3.csv(sourceFile).then(function(rawData) {
             .attr('x2', xc)
             .attr('y1', yc)
 
-        var size = 100
-
         dayFocused.select('.bottom')
-            .attr('x1', xc - size/2)
-            .attr('x2', xc + size/2)
+            .attr('x1', xc - labelWidth/2)
+            .attr('x2', xc + labelWidth/2)
 
         dayFocused.select('.mean')
             .attr('y1', yc)
             .attr('y2', yc)
 
-        if (false) {
+        if (false) { // calc intersection dates
             let lower = extData.map(t => t.v <= d.v);
             let higher = extData.map(t => t.v > d.v);
 
@@ -396,13 +417,12 @@ d3.csv(sourceFile).then(function(rawData) {
         if (d.f) {
             dayFocused.select('.second')
                 .attr('x', xc)
-                .text(`Approximtion: ${d3.format(".0f")(d.f)}`)
+                .text(`Estimation: ${d3.format(".0f")(d.f)}`)
         } else {
             dayFocused.select('.second')
                 .text('')
         }
     }
-
 
     pointsDay
         .selectAll("circle")
@@ -449,9 +469,7 @@ d3.csv(sourceFile).then(function(rawData) {
         .on('click', event => { if (event.defaultPrevented) return; })
         .call(d3.drag().on("drag", dragged));
 
-
     const yAxis = (g, y) => g
-        .attr("class", "y axis")
         .call(d3.axisLeft()
             .ticks(5)
             .scale(y))
@@ -459,16 +477,12 @@ d3.csv(sourceFile).then(function(rawData) {
     //    .call(g => g.select(".domain").remove())
 
     const yGrid = (g, y) => g
-        .attr("class", "y grid")
         .call(d3.axisLeft()
             .scale(y)
             .ticks(5)
             .tickSize(-width)
             .tickFormat(''))
     //    .call(g => g.select(".domain").remove())
-
-    const gya = focus.append("g")
-    const gyg = focus.append("g")
 
     gya.call(yAxis, yScale)
     gyg.call(yGrid, yScale)
