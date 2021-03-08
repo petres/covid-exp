@@ -5,6 +5,6 @@ module.exports = merge(baseConfig, {
     mode: 'production',
     output: {
         publicPath: '/',
-        filename: '[name].[hash].js'
+        filename: '[name].[fullhash].js'
     }
 });

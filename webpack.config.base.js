@@ -37,7 +37,6 @@ module.exports = {
                 { from: 'data', to: 'data' }
             ]
         }),
-        new CleanWebpackPlugin(),
         new RemoveEmptyScriptsPlugin(),
         new MiniCssExtractPlugin({
             filename: '[name].[chunkhash].css'

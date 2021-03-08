@@ -1,4 +1,4 @@
-import * as d3 from "d3";
+import d3 from "./d3";
 
 var sourceFile = "data/n.csv";
 
@@ -265,8 +265,6 @@ d3.csv(sourceFile).then(function(rawData) {
     var xScale = x;
 
     // focus x axis labels
-
-
     var ignoreBrushEvent = false;
     var ignoreZoomEvent = false;
 
@@ -293,16 +291,15 @@ d3.csv(sourceFile).then(function(rawData) {
 
     function redraw(xz) {
         xScale = xz;
-        //var days = (xz.invert(width) - xz.invert(0))/(1000 * 60 * 60 * 24)
-        //gx1.attr('opacity', 0)
-        //gx2.attr('opacity', 0)
-        //if (days > 400) {
+        let days = xz.invert(width).diffDays(xz.invert(0));
+
+        if (days > 300) {
             gx1.call(xAxis, xz, 'timeYear', null, 16);
             gx2.call(xAxis, xz, 'timeMonth', "%b");
-        //} else {
-        //    gx1.call(xAxis, xz, 'timeYear', null, 16);
-        //    gx2.call(xAxis, xz, 'timeMonth', "%b %Y");
-        //}
+        } else {
+            gx1.call(xAxis, xz, 'timeMonth', "%b", 16);
+            gx2.call(xAxis, xz, 'timeWeek', "%d");
+        }
 
         pointsDay.selectAll("circle")
             .attr("cx", function(d) { return xz(d.date); });

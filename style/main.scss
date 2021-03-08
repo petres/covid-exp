@@ -52,7 +52,6 @@ line {
         &.timeYear {
             text {
                 font-size: 10px;
-                font-weight: bold;
             }
             line {
             	opacity: 0.5;
@@ -63,8 +62,19 @@ line {
                 font-size: 11px;
             }
             line {
-            	opacity: 0.3;
+            	opacity: 0.25;
             }
+        }
+        &.timeWeek {
+            text {
+                font-size: 11px;
+            }
+            line {
+                opacity: 0.07;
+            }
+        }
+        &:first-child text {
+            font-weight: bold;
         }
     }
 
