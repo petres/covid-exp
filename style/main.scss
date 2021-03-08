@@ -17,17 +17,29 @@ line {
 
 #controls {
     position: relative;
+    margin-left: 80px;
+    font-size: 14px;
+
+    #intro {
+        float: left;
+        width: 500px;
+        p {
+            margin: 0 0 10px 0;
+        }
+    }
+
+    #buttons {
+        float: right;
+        width: 100px;
+    }
+
+    #context {
+        float: right;
+        width: 500px;
+    }
 }
 
-#buttons {
-    float: right;
-    width: 100px;
-}
 
-#context {
-    float: right;
-    width: 500px;
-}
 
 #timeline {
     rect.pane {

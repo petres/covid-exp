@@ -239,7 +239,7 @@ d3.csv(sourceFile).then(function(rawData) {
             .domain([0, highestValue * 1.05]),
         log: d3.scaleLog()
             .range([height, 0])
-            .domain([1, highestValue * 1.2])
+            .domain([1, highestValue * 2])
     }
 
     var yScale = yScales.linear;
