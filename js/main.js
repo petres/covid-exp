@@ -15,9 +15,9 @@ Date.prototype.diffDays = function(date) {
 
 
 var svgWidth  = 1200;
-var svgHeight = 650;
+var svgHeight = 600;
 
-var margin	= {top: 40, right: 40, bottom: 110, left: 80},
+var margin	= {top: 40, right: 40, bottom: 90, left: 80},
     width	= svgWidth - margin.left - margin.right,
     height	= svgHeight - margin.top - margin.bottom;
 
@@ -67,6 +67,9 @@ const gx1 = focus.append("g")
 const gx2 = focus.append("g")
     .attr("class", "x axis")
 
+const gx3 = focus.append("g")
+    .attr("class", "x axis")
+
 const gya = focus.append("g")
     .attr("class", "y axis")
 
@@ -81,14 +84,14 @@ const gyg = focus.append("g")
 const lines = focus.append("g")
     .attr("class", "lines")
 
+const lineMeanF = lines.append("path")
+    .attr("class", "line-mean-f");
+
 const lineMean = lines.append("path")
     .attr("class", "line-mean");
 
 const lineDay = lines.append("path")
     .attr("class", "line-day");
-
-const lineMeanF = lines.append("path")
-    .attr("class", "line-mean-f");
 
 const pointsDay = lines.append("g")
     .attr('class', 'points-day')
@@ -227,7 +230,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
     //var dataXrange = d3.extent(baseData, function(d) { return d.date; });
     var highestValue = d3.max(baseData, function(d) { return d.yd; });
-    var dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays*2)]
+    var dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays)]
 
     var x = d3.scaleTime()
         .range([0, width])
@@ -255,11 +258,11 @@ d3.csv(sourceFile).then(function(rawData) {
     var x2Axis = d3.axisBottom()
         .tickSize(-contextHeight)
         .scale(x2)
-        .ticks(8)
+        .ticks(5)
 
     const xAxis = (g, x, name, format = null, padding = 4) => g
         .attr("class", `x axis ${name}`)
-        .attr("opacity", 1)
+        .style("opacity", 1)
         .call(d3.axisTop(x).tickSize(-(height)).ticks(d3[name], format).tickSizeOuter(0).tickPadding(padding))
 
     var xScale = x;
@@ -296,9 +299,11 @@ d3.csv(sourceFile).then(function(rawData) {
         if (days > 300) {
             gx1.call(xAxis, xz, 'timeYear', null, 16);
             gx2.call(xAxis, xz, 'timeMonth', "%b");
+            gx3.style("opacity", 0)
         } else {
             gx1.call(xAxis, xz, 'timeMonth', "%b", 16);
             gx2.call(xAxis, xz, 'timeWeek', "%d");
+            gx3.call(xAxis, xz, 'timeYear', "");
         }
 
         pointsDay.selectAll("circle")
@@ -471,7 +476,7 @@ d3.csv(sourceFile).then(function(rawData) {
             .ticks(5)
             .scale(y))
             //.tickFormat(d3.format(",.0f")))
-    //    .call(g => g.select(".domain").remove())
+        .call(g => g.select(".domain").remove())
 
     const yGrid = (g, y) => g
         .call(d3.axisLeft()
@@ -479,7 +484,7 @@ d3.csv(sourceFile).then(function(rawData) {
             .ticks(5)
             .tickSize(-width)
             .tickFormat(''))
-    //    .call(g => g.select(".domain").remove())
+        .call(g => g.select(".domain").remove())
 
     gya.call(yAxis, yScale)
     gyg.call(yGrid, yScale)
@@ -495,6 +500,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [x2(parseDate('2020-10-20')), x2(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [x2(parseDate('2020-09-15')), x2(approxEnd.addDays(forecastDays))])
     focusEvent(extData[extData.length - forecastDays])
 });
