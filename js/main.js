@@ -30,7 +30,7 @@ var parseDate = d3.timeParse("%Y-%m-%d")
 
 
 var forecastDays = 40;
-var approxDays = 17;
+var approxDays = 22;
 var approxLag = 2;
 
 
@@ -166,8 +166,8 @@ d3.csv(sourceFile).then(function(rawData) {
         return {
             date: parseDate(d.d),
             yd: parseInt(d.n),
-            y: parseInt(d.n7)/7,
-            v: parseInt(d.n7)/7,
+            y: parseFloat(d.n7),
+            v: parseFloat(d.n7),
         }
     });
 

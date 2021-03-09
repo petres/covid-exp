@@ -11,7 +11,9 @@ d = d.raw[Bundesland == 'Österreich', .(
     n = AnzahlFaelle
 )]
 
-d[, n7 := cumsum(n) - shift(cumsum(n), 7, fill = 0)]
+meanDays = 7
+
+d[, n7 := (cumsum(n) - shift(cumsum(n), meanDays, fill = 0))/meanDays]
 
 l = nrow(d)
 d[l, ]
