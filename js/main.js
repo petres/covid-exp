@@ -15,9 +15,9 @@ Date.prototype.diffDays = function(date) {
 
 
 var svgWidth  = 1200;
-var svgHeight = 700;
+var svgHeight = 650;
 
-var margin	= {top: 40, right: 40, bottom: 160, left: 80},
+var margin	= {top: 40, right: 40, bottom: 110, left: 80},
     width	= svgWidth - margin.left - margin.right,
     height	= svgHeight - margin.top - margin.bottom;
 

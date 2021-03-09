@@ -15,6 +15,13 @@ line {
     stroke-width: 1;
 }
 
+#sources {
+    border-top: 1px solid #CCC;
+    padding-top: 10px;
+    font-size: 10px;
+    text-align: center;
+}
+
 #controls {
     position: relative;
     margin-left: 80px;
@@ -60,7 +67,7 @@ line {
         &.timeMonth {
             text {
                 font-size: 11px;
-            }
+            }sources
             line {
             	opacity: 0.25;
             }
