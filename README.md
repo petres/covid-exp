@@ -1,4 +1,4 @@
-http://covid-exp.abteil.org/
+https://covid-exp.abteil.org/
 
 # RUN
 
