@@ -11,6 +11,26 @@ d = d.raw[Bundesland == 'Österreich', .(
     n = AnzahlFaelle
 )]
 
+
+
+# 
+# d.raw.m = fread(
+#     'https://info.gesundheitsministerium.gv.at/data/timeline-faelle-ems.csv'
+# )
+# 
+# 
+# d.m = d.raw.m[BundeslandID == 10, .(
+#     d = as.Date(substr(Datum, 1, 10)),
+#     ns = BestaetigteFaelleEMS
+# )]
+# 
+# d.m[, n := shift(ns, -1) - ns]
+
+
+
+merge(d, d.m, by=c('d'))
+
+
 meanDays = 7
 
 d[, n7 := (cumsum(n) - shift(cumsum(n), meanDays, fill = 0))/meanDays]
