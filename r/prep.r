@@ -26,9 +26,7 @@ d = d.raw[Bundesland == 'Österreich', .(
 # 
 # d.m[, n := shift(ns, -1) - ns]
 
-
-
-merge(d, d.m, by=c('d'))
+# merge(d, d.m, by=c('d'))
 
 
 meanDays = 7
