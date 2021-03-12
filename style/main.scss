@@ -139,18 +139,19 @@ line {
 
     .lines {
         .line-day {
-            opacity: 0.2;
+            opacity: 0.4;
             stroke: green;
         }
         .line-mean {
             stroke: blue;
+            stroke-width: 1.5;
         }
         .line-mean-f {
             stroke: red;
             stroke-width: 1.5;
         }
         .points-day circle {
-            opacity: 0.1;
+            opacity: 0.3;
             fill: green;
             r: 2;
         }
@@ -174,8 +175,14 @@ line {
         }
     }
 
-    path.line {
-        stroke: blue;
-        stroke-width: 1;
+    .lines {
+        .line-mean {
+            stroke: blue;
+            stroke-width: 1;
+        }
+        .line-mean-f {
+            stroke: red;
+            stroke-width: 1;
+        }
     }
 }
