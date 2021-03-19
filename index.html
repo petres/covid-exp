@@ -2,9 +2,10 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Covid19 Extrapolation</title>
+        <title>Covid19 Projection</title>
     </head>
     <body>
+        <h1>Covid19 Cases Projection for Austria </h1>
         <div id="controls">
             <div id="intro">
                 <p>
@@ -25,8 +26,15 @@
             </div>
         </div>
         <div id="timeline"></div>
-        <div id="sources">
+        <div id="sources" class="gm">
             Data Source: <i>BMSGPK, Österreichisches COVID-19 Open Data Informationsportal (<a target='_blank' href="https://www.data.gv.at/covid-19">https://www.data.gv.at/covid-19</a>)</i>
+        </div>
+        <div id="notes" class="gm">
+            <p>
+                Because the case data used are reported by date of diagnoses, the last two days are not included in the projection because the case count will be revised upward substantially in future updates. Side note: Therefore, the reported AGES incidence number are always biased downwards.
+            </p><p>
+                The interactive graph allows you to adjust the initial date of the approximation period.
+            </p>
         </div>
     </body>
 </html>
