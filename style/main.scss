@@ -23,7 +23,7 @@ line {
     stroke-width: 1;
 }
 div.gm {
-    margin: 0 40px 0 80px;
+    margin: 0 60px 0 80px;
 }
 
 #notes {
@@ -147,13 +147,13 @@ div.gm {
             }
             &.handle {
                 stroke: red;
-                opacity: 0.8;
-                stroke-width: 3;
-
-                &.start {
-                    cursor: col-resize;
-                    stroke-width: 7;
-                }
+                opacity: 0.5;
+                stroke-width: 10;
+                cursor: col-resize;
+                // &.start {
+                //
+                //     stroke-width: 7;
+                // }
             }
         }
     }

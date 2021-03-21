@@ -17,11 +17,11 @@ Date.prototype.diffDays = function(date) {
 const svgWidth  = 1200;
 const svgHeight = 600;
 
-const margin = {top: 40, right: 40, bottom: 90, left: 80},
+const margin = {top: 40, right: 60, bottom: 90, left: 80},
       width	 = svgWidth - margin.left - margin.right,
       height = svgHeight - margin.top - margin.bottom;
 
-const contextMargin = {top: 0, right: 40, bottom: 20, left: 20},
+const contextMargin = {top: 0, right: 60, bottom: 20, left: 20},
       contextWidth = 500 - contextMargin.left - contextMargin.right,
       contextHeight = 40;
 
@@ -80,6 +80,22 @@ const gy2a = focus.append("g")
 const gyg = focus.append("g")
     .attr("class", "y grid")
 
+
+
+    // text label for the y axis
+focus.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("y", -40)
+    .attr("x",0 - (height / 2))
+    .style("text-anchor", "middle")
+    .text("Cases");
+
+focus.append("text")
+    .attr("transform", "rotate(90)")
+    .attr("y", -(width + 40))
+    .attr("x", (height / 2))
+    .style("text-anchor", "middle")
+    .text("Mean Daily Growthrate");
 /* --- */
 
 
@@ -182,12 +198,12 @@ approx.append('line')
 const handleStart = approx.append('line')
     .attr("class", 'handle start')
     .attr("y1", height)
-    .attr("y2", height + 10)
+    .attr("y2", height + 15)
 
-approx.append('line')
+const handleEnd = approx.append('line')
     .attr("class", 'handle end')
     .attr("y1", height)
-    .attr("y2", height + 10)
+    .attr("y2", height + 15)
 
 /* --- */
 
@@ -213,6 +229,9 @@ d3.csv(sourceFile).then(function(rawData) {
 
         const countDays = d3.timeDays(start, end).length;
         if (countDays < 1)
+            return;
+
+        if (!(end in d2i && d2i[end] in baseData))
             return;
 
         approxStart = start;
@@ -302,7 +321,7 @@ d3.csv(sourceFile).then(function(rawData) {
         .call(d3.axisTop(x).tickSize(-(height)).ticks(d3[name], format).tickSizeOuter(0).tickPadding(padding))
 
     const y2Axis = d3.axisRight(y2)
-        .ticks(10, ".1f");
+        .ticks(10, v => d3.format(".0%")(v - 1));
 
     gy2a.call(y2Axis)
         .call(g => g.select(".domain").remove())
@@ -334,12 +353,6 @@ d3.csv(sourceFile).then(function(rawData) {
                 .x(d => xContext(d.date))
                 .y(d => yContext(d.f))
                 .curve(d3.curveMonotoneX))
-    }
-
-    function updateApprox(date) {
-        calcApprox(date);
-        redraw(xScale);
-        redrawContextApprox();
     }
 
     function redraw(xz) {
@@ -533,13 +546,22 @@ d3.csv(sourceFile).then(function(rawData) {
 
     function dragged(event, d) {
         const dsi = d3.bisectCenter(dates, xScale.invert(event.x))
-        updateApprox(dates[dsi])
+        if (d == 'start')
+            calcApprox(dates[dsi]);
+        else
+            calcApprox(null, dates[dsi]);
+        redraw(xScale);
+        redrawContextApprox();
         //d3.select(this).raise().attr("cx", d.x = event.x).attr("cy", d.y = event.y);
     }
 
     handleStart
         .on('click', event => { if (event.defaultPrevented) return; })
-        .call(d3.drag().on("drag", dragged));
+        .call(d3.drag().on("drag", e => { dragged(e, 'start')}));
+
+    handleEnd
+        .on('click', event => { if (event.defaultPrevented) return; })
+        .call(d3.drag().on("drag", e => { dragged(e, 'end')}));
 
     const yAxis = (g, y) => g
         .call(d3.axisLeft()
@@ -570,6 +592,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [xContext(parseDate('2020-10-01')), xContext(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-10-15')), xContext(approxEnd.addDays(forecastDays))])
     focusEvent(extData[extData.length - forecastDays])
 });
