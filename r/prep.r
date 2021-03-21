@@ -30,12 +30,15 @@ d = d.raw[Bundesland == 'Österreich', .(
 
 
 meanDays = 7
-
 d[, n7 := (cumsum(n) - shift(cumsum(n), meanDays, fill = 0))/meanDays]
+
+d[, n7g := (shift(n7, -2) + shift(n7, -1) + n7)/(n7 + shift(n7, 1) + shift(n7, 2))]
+
 
 l = nrow(d)
 d[l, ]
 
 ggplot(d, aes(x = d, y = n7)) + geom_line()
+ggplot(d[d > '2020-04-01'], aes(x = d, y = n7g)) + geom_line()
 
 fwrite(d, './data/n.csv')

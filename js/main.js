@@ -30,8 +30,8 @@ const parseDate = d3.timeParse("%Y-%m-%d")
 
 
 const forecastDays = 40;
-const approxDays = 36;
-const approxLag = 1;
+const approxDays = 35;
+const approxLag = 2;
 
 
 const vis = d3.select("#timeline").append("svg")
@@ -73,6 +73,10 @@ const gx3 = focus.append("g")
 const gya = focus.append("g")
     .attr("class", "y axis")
 
+const gy2a = focus.append("g")
+    .attr("class", "y axis")
+    .attr("transform", `translate(${width}, 0)`);
+
 const gyg = focus.append("g")
     .attr("class", "y grid")
 
@@ -90,6 +94,14 @@ const lineMeanF = lines.append("path")
 
 const lineMean = lines.append("path")
     .attr("class", "line-mean");
+
+const lineGrowth = lines.append("path")
+    .attr("class", "line-growth");
+
+const lineGrowth1 = lines.append("line")
+    .attr("class", "line-growth1")
+    .attr("x1", 0)
+    .attr("x2", width);
 
 const lineDay = lines.append("path")
     .attr("class", "line-day");
@@ -121,11 +133,15 @@ const dayFocused = focus.append('g')
 
 dayFocused.append('line')
     .attr("class", 'down')
+    .attr("y1", 0)
     .attr("y2", labelPosOffsetBottom)
 
 dayFocused.append('line')
-    .attr("class", 'mean')
+    .attr("class", 'left')
     .attr("x1", 0)
+
+dayFocused.append('line')
+    .attr("class", 'right')
     .attr("x2", width)
 
 dayFocused.append('line')
@@ -182,6 +198,7 @@ d3.csv(sourceFile).then(function(rawData) {
             yd: parseInt(d.n),
             y: parseFloat(d.n7),
             v: parseFloat(d.n7),
+            g: d.n7g == 'Inf' ? Infinity : parseFloat(d.n7g),
         }
     });
 
@@ -258,23 +275,37 @@ d3.csv(sourceFile).then(function(rawData) {
 
     let yScale = yScales.linear;
 
-    const x2 = d3.scaleTime()
+    let growhtF = 1.5
+    const y2 = d3.scaleLog()
+        .range([height, 0])
+        .domain([1/growhtF, growhtF]);
+
+    lineGrowth1.attr('y1', y2(1))
+        .attr('y2', y2(1))
+
+    const xContext = d3.scaleTime()
         .range([0, contextWidth])
         .domain(dataXrange);
 
-    const y2 = d3.scaleLinear()
+    const yContext = d3.scaleLinear()
         .range([contextHeight, 0])
         .domain([0, highestValue * 1.05]);
 
-    const x2Axis = d3.axisBottom()
+    const xContextAxis = d3.axisBottom()
         .tickSize(-contextHeight)
-        .scale(x2)
+        .scale(xContext)
         .ticks(5)
 
     const xAxis = (g, x, name, format = null, padding = 4) => g
         .attr("class", `x axis ${name}`)
         .style("opacity", 1)
         .call(d3.axisTop(x).tickSize(-(height)).ticks(d3[name], format).tickSizeOuter(0).tickPadding(padding))
+
+    const y2Axis = d3.axisRight(y2)
+        .ticks(10, ".1f");
+
+    gy2a.call(y2Axis)
+        .call(g => g.select(".domain").remove())
 
     let xScale = x;
 
@@ -297,14 +328,11 @@ d3.csv(sourceFile).then(function(rawData) {
         .on("zoom", zoomed)
         .on("end", zoomend);
 
-
-
-
     function redrawContextApprox() {
         contextLineMeanF.datum(extra)
             .attr("d",  d3.line()
-                .x(d => x2(d.date))
-                .y(d => y2(d.f))
+                .x(d => xContext(d.date))
+                .y(d => yContext(d.f))
                 .curve(d3.curveMonotoneX))
     }
 
@@ -335,6 +363,13 @@ d3.csv(sourceFile).then(function(rawData) {
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
                 .y(d => yScale(d.y))
+                .curve(d3.curveMonotoneX))
+
+        // console.log(baseData)
+        lineGrowth.datum(baseData.filter(d => d.g))
+            .attr("d",  d3.line()
+                .x(d => xz(d.date))
+                .y(d => y2(d.g))
                 .curve(d3.curveMonotoneX))
 
         lineDay.datum(baseData)
@@ -368,11 +403,11 @@ d3.csv(sourceFile).then(function(rawData) {
         if (ignoreBrushEvent)
             return;
 
-        const xz = x.copy().domain([x2.invert(event.selection[0]), x2.invert(event.selection[1])]);
+        const xz = x.copy().domain([xContext.invert(event.selection[0]), xContext.invert(event.selection[1])]);
         redraw(xz);
 
         const s = xz.domain();
-        const s_orig = x2.domain();
+        const s_orig = xContext.domain();
         const newS = (s_orig[1]-s_orig[0])/(s[1]-s[0]);
         const t = (s[0]-s_orig[0])/(s_orig[1]-s_orig[0]);
         const trans = width*newS*t;
@@ -389,7 +424,7 @@ d3.csv(sourceFile).then(function(rawData) {
         const xz = event.transform.rescaleX(x);
         redraw(xz);
 
-        brush.move(context.select('.brush'), [x2(xz.invert(0)), x2(xz.invert(width))])
+        brush.move(context.select('.brush'), [xContext(xz.invert(0)), xContext(xz.invert(width))])
     };
 
     focus.append("g")
@@ -405,19 +440,31 @@ d3.csv(sourceFile).then(function(rawData) {
         const xc = xScale(d.date);
         const yc = yScale(d.v);
 
+
+
         dayFocused.datum(d)
         dayFocused.select('.down')
             .attr('x1', xc)
             .attr('x2', xc)
-            .attr('y1', yc)
 
         dayFocused.select('.bottom')
             .attr('x1', xc - labelWidth/2)
             .attr('x2', xc + labelWidth/2)
 
-        dayFocused.select('.mean')
+        dayFocused.select('.left')
+            .attr('x2', xc)
             .attr('y1', yc)
             .attr('y2', yc)
+
+        dayFocused.select('.right').style('visibility', 'hidden')
+        if (d.g) {
+            const y2c = y2(d.g);
+            dayFocused.select('.right')
+                .style('visibility', 'visible')
+                .attr('x1', xc)
+                .attr('y1', y2c)
+                .attr('y2', y2c)
+        }
 
         if (false) { // calc intersection dates
             const lower = extData.map(t => t.v <= d.v);
@@ -457,19 +504,19 @@ d3.csv(sourceFile).then(function(rawData) {
     contextLineMean
         .datum(baseData)
         .attr("d",  d3.line()
-            .x(d => x2(d.date))
-            .y(d => y2(d.y)))
+            .x(d => xContext(d.date))
+            .y(d => yContext(d.y)))
 
     redrawContextApprox();
 
     context.append("g")
         .attr("class", "x2 axis")
         .attr("transform", `translate(0, ${contextHeight})`)
-        .call(x2Axis);
+        .call(xContextAxis);
 
     context.append("g")
         .attr("class", "x2 axis")
-        .call(d3.axisBottom(x2).tickValues([]).tickSizeOuter(0))
+        .call(d3.axisBottom(xContext).tickValues([]).tickSizeOuter(0))
 
     context.append("g")
         .attr("class", "x brush")
@@ -523,6 +570,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [x2(parseDate('2020-09-15')), x2(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-10-01')), xContext(approxEnd.addDays(forecastDays))])
     focusEvent(extData[extData.length - forecastDays])
 });
