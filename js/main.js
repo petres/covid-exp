@@ -30,7 +30,7 @@ const parseDate = d3.timeParse("%Y-%m-%d")
 
 
 const forecastDays = 40;
-const approxDays = 35;
+const approxDays = 36;
 const approxLag = 2;
 
 
@@ -71,10 +71,10 @@ const gx3 = focus.append("g")
     .attr("class", "x axis")
 
 const gya = focus.append("g")
-    .attr("class", "y axis")
+    .attr("class", "y axis cases")
 
 const gy2a = focus.append("g")
-    .attr("class", "y axis")
+    .attr("class", "y axis growth")
     .attr("transform", `translate(${width}, 0)`);
 
 const gyg = focus.append("g")
@@ -83,14 +83,18 @@ const gyg = focus.append("g")
 
 
     // text label for the y axis
-focus.append("text")
+focus.append("g")
+    .attr("class", "y axis cases")
+    .append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", -40)
     .attr("x",0 - (height / 2))
     .style("text-anchor", "middle")
     .text("Cases");
 
-focus.append("text")
+focus.append("g")
+    .attr("class", "y axis growth")
+    .append("text")
     .attr("transform", "rotate(90)")
     .attr("y", -(width + 40))
     .attr("x", (height / 2))
@@ -115,9 +119,12 @@ const lineGrowth = lines.append("path")
     .attr("class", "line-growth");
 
 const lineGrowth1 = lines.append("line")
-    .attr("class", "line-growth1")
+    .attr("class", "line-growth-1")
     .attr("x1", 0)
     .attr("x2", width);
+
+const lineGrowthF = lines.append("line")
+    .attr("class", "line-growth-f");
 
 const lineDay = lines.append("path")
     .attr("class", "line-day");
@@ -140,7 +147,7 @@ const contextLineMeanF = contextLines.append("path")
 
 /* Day Selection Elements */
 
-const labelPosOffsetBottom = height +  33;
+const labelPosOffsetBottom = height + 33;
 const labelLineHeight = 15;
 const labelWidth = 50;
 
@@ -240,7 +247,7 @@ d3.csv(sourceFile).then(function(rawData) {
         const valueStart = baseData[d2i[approxStart]].y;
         const valueEnd = baseData[d2i[approxEnd]].y;
 
-        const approxR = Math.pow(valueEnd/valueStart, 1/countDays)
+        approxR = Math.pow(valueEnd/valueStart, 1/countDays)
 
         // Create right data format for lines
         extData = baseData.map(a => ({...a}));
@@ -272,6 +279,7 @@ d3.csv(sourceFile).then(function(rawData) {
     let approxStart = null;
     let extra = null;
     let extData = null;
+    let approxR = null;
 
     calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
@@ -294,7 +302,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
     let yScale = yScales.linear;
 
-    let growhtF = 1.5
+    let growhtF = 1.21;
     const y2 = d3.scaleLog()
         .range([height, 0])
         .domain([1/growhtF, growhtF]);
@@ -384,6 +392,12 @@ d3.csv(sourceFile).then(function(rawData) {
                 .x(d => xz(d.date))
                 .y(d => y2(d.g))
                 .curve(d3.curveMonotoneX))
+
+        lineGrowthF
+            .attr("x1", xz(approxStart))
+            .attr("x2", xz(extEnd))
+            .attr("y1", y2(approxR))
+            .attr("y2", y2(approxR))
 
         lineDay.datum(baseData)
             .attr("d",  d3.line()

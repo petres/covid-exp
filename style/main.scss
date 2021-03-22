@@ -70,6 +70,15 @@ div.gm {
     	pointer-events: all;
     }
 
+    .y.axis {
+        &.growth text {
+            color: #600;
+        }
+        &.cases text {
+            color: #006;
+        }
+    }
+
     .x.axis {
         &.timeYear {
             text {
@@ -107,7 +116,7 @@ div.gm {
     .dayFocused {
         line {
             stroke: black;
-            opacity: 0.8;
+            opacity: 0.6;
             stroke-width: 0.5;
             &.left {
                 stroke: blue;
@@ -170,12 +179,17 @@ div.gm {
         .line-growth {
             stroke: #A00;
             stroke-width: 1.5;
-            opacity: 0.4;
+            opacity: 0.5;
         }
-        .line-growth1 {
+        .line-growth-1 {
             stroke: #500;
             stroke-width: 1;
             opacity: 0.4;
+        }
+        .line-growth-f {
+            stroke: red;
+            stroke-width: 1;
+            opacity: 0.5;
         }
         .line-mean-f {
             stroke: red;

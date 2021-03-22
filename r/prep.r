@@ -32,7 +32,7 @@ d = d.raw[Bundesland == 'Österreich', .(
 meanDays = 7
 d[, n7 := (cumsum(n) - shift(cumsum(n), meanDays, fill = 0))/meanDays]
 
-d[, n7g := (shift(n7, -2) + shift(n7, -1) + n7)/(n7 + shift(n7, 1) + shift(n7, 2))]
+d[, n7g := sqrt((shift(n7, -2) + shift(n7, -1) + n7)/(n7 + shift(n7, 1) + shift(n7, 2)))]
 
 
 l = nrow(d)
