@@ -30,7 +30,7 @@ const parseDate = d3.timeParse("%Y-%m-%d")
 
 
 const forecastDays = 40;
-const approxDays = 36;
+const approxDays = 38;
 const approxLag = 2;
 
 
