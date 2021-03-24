@@ -14,14 +14,16 @@ Date.prototype.diffDays = function(date) {
 }
 
 
-const svgWidth  = 1200;
+// const svgWidth  = 1200;
+const svgWidth  = window.innerWidth > 1200 ? window.innerWidth : 1200;
+
 const svgHeight = 600;
 
-const margin = {top: 40, right: 60, bottom: 90, left: 80},
+const margin = {top: 60, right: 120, bottom: 90, left: 120},
       width	 = svgWidth - margin.left - margin.right,
       height = svgHeight - margin.top - margin.bottom;
 
-const contextMargin = {top: 0, right: 60, bottom: 20, left: 20},
+const contextMargin = {top: 0, right: 0, bottom: 20, left: 20},
       contextWidth = 500 - contextMargin.left - contextMargin.right,
       contextHeight = 40;
 
@@ -35,10 +37,14 @@ const approxLag = 2;
 
 
 const vis = d3.select("#timeline").append("svg")
-    .attr("width", width + margin.left + margin.right)
+    .attr("id", "t-svg")
+    //.attr("width", width + margin.left + margin.right)
+    .attr("width", '100%')
     .attr("height", height + margin.top + margin.bottom)
 
+
 const context = d3.select("#context").append("svg")
+    //.attr("width", '100%')
     .attr("width", contextWidth + contextMargin.left + contextMargin.right)
     .attr("height", contextHeight + contextMargin.top + contextMargin.bottom)
     .append('g')
@@ -606,6 +612,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [xContext(parseDate('2020-10-15')), xContext(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-09-01')), xContext(approxEnd.addDays(forecastDays))])
     focusEvent(extData[extData.length - forecastDays])
 });
