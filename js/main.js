@@ -88,7 +88,7 @@ const gyg = focus.append("g")
 
 
 
-    // text label for the y axis
+// text label for the y axis
 focus.append("g")
     .attr("class", "y axis cases")
     .append("text")
@@ -142,11 +142,13 @@ const pointsDay = lines.append("g")
 const contextLines = context.append("g")
     .attr("class", "lines")
 
+const contextLineMeanF = contextLines.append("path")
+    .attr('class', 'line-mean-f')
+
 const contextLineMean = contextLines.append("path")
     .attr('class', 'line-mean')
 
-const contextLineMeanF = contextLines.append("path")
-    .attr('class', 'line-mean-f')
+
 
 /* --- */
 

@@ -1,3 +1,6 @@
+
+
+
 body {
     margin: 0;
     min-width: 1200px;
@@ -73,10 +76,10 @@ div.gm {
 
     .y.axis {
         &.growth text {
-            color: #600;
+            fill: #600;
         }
         &.cases text {
-            color: #006;
+            fill: #006;
         }
     }
 
@@ -169,6 +172,11 @@ div.gm {
     }
 
     .lines {
+        .points-day circle {
+            opacity: 0.3;
+            fill: green;
+            r: 2;
+        }
         .line-day {
             opacity: 0.4;
             stroke: green;
@@ -177,29 +185,25 @@ div.gm {
             stroke: blue;
             stroke-width: 1.5;
         }
+        .line-mean-f {
+            stroke: #AAF;
+            stroke-width: 1.5;
+        }
+
         .line-growth {
             stroke: #A00;
             stroke-width: 1.5;
             opacity: 0.5;
         }
         .line-growth-1 {
-            stroke: #500;
+            stroke: #600;
             stroke-width: 1;
             opacity: 0.4;
         }
         .line-growth-f {
             stroke: red;
             stroke-width: 1;
-            opacity: 0.5;
-        }
-        .line-mean-f {
-            stroke: red;
-            stroke-width: 1.5;
-        }
-        .points-day circle {
-            opacity: 0.3;
-            fill: green;
-            r: 2;
+            opacity: 0.6;
         }
     }
 }
@@ -224,11 +228,11 @@ div.gm {
     .lines {
         .line-mean {
             stroke: blue;
-            stroke-width: 1;
+            stroke-width: 1.5;
         }
         .line-mean-f {
-            stroke: red;
-            stroke-width: 1;
+            stroke: #AAF;
+            stroke-width: 1.5;
         }
     }
 }
