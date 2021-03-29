@@ -32,8 +32,8 @@ const parseDate = d3.timeParse("%Y-%m-%d")
 
 
 const forecastDays = 40;
-const approxDays = 45;
-const approxLag = 2;
+const approxDays = 44;
+const approxLag = 4;
 
 
 const vis = d3.select("#timeline").append("svg")
