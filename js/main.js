@@ -289,7 +289,10 @@ d3.csv(sourceFile).then(function(rawData) {
     let extData = null;
     let approxR = null;
 
-    calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
+
+
+    calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
+    //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
     const highestValue = d3.max(baseData, function(d) { return d.yd; });
