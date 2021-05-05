@@ -1,4 +1,6 @@
-library(data.table)
+# INIT
+rm(list = ls())
+source('r/_shared.r', encoding = 'UTF-8')
 library(ggplot2)
 
 #d.raw = fread('./r/data/CovidFaelle_Timeline.csv')
@@ -41,4 +43,4 @@ d[l, ]
 ggplot(d, aes(x = d, y = n7)) + geom_line()
 ggplot(d[d > '2020-04-01'], aes(x = d, y = n7g)) + geom_line()
 
-fwrite(d, './data/n.csv')
+fwrite(d, g$f$cases.out)

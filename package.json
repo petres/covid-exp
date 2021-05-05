@@ -23,7 +23,7 @@
     "start": "webpack serve --config webpack.config.dev.js",
     "build": "webpack --config webpack.config.prod.js",
     "upload": "rsync -arv --delete -e 'ssh -p 21022' dist/ peter@server.abteil.org:/var/www/html/covid-exp/public/",
-    "update": "Rscript r/prep.r",
+    "update": "Rscript r/ages.r",
     "deploy": "rm -rf dist/ && npm run build && npm run upload"
   },
   "author": "",
