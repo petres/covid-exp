@@ -13,7 +13,9 @@ library(ggplot2)
 d.raw = fread(g$u$cases.ages)
 d = d.raw[Bundesland == 'Österreich', .(
     d = as.Date(Time, format="%d.%m.%Y"),
-    n = AnzahlFaelle
+    n = AnzahlFaelle,
+    p = AnzEinwohner,
+    g = AnzahlGeheiltSum
 )]
 # ------------------------------------------------------------------------------
 

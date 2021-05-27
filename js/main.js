@@ -155,7 +155,7 @@ const contextLineMean = contextLines.append("path")
 
 /* Day Selection Elements */
 
-const labelPosOffsetBottom = height + 33;
+const labelPosOffsetBottom = height + 20;
 const labelLineHeight = 15;
 const labelWidth = 50;
 
@@ -192,6 +192,9 @@ dayFocused.append('text')
     .attr("class", 'second')
     .attr("y", labelPosOffsetBottom + labelLineHeight*3)
 
+dayFocused.append('text')
+    .attr("class", 'third')
+    .attr("y", labelPosOffsetBottom + labelLineHeight*4)
 /* --- */
 
 
@@ -229,6 +232,8 @@ d3.csv(sourceFile).then(function(rawData) {
             yd: parseInt(d.n),
             y: parseFloat(d.n7),
             v: parseFloat(d.n7),
+            i: parseFloat(d.n7)*7/parseInt(d.p)*100000,
+            p: parseInt(d.p),
             g: d.n7g == 'Inf' ? Infinity : parseFloat(d.n7g),
         }
     });
@@ -270,11 +275,14 @@ d3.csv(sourceFile).then(function(rawData) {
                     date: date,
                     f: forecast,
                     v: forecast,
+                    p: extData[extData.length - 1].p
                 };
             } else {
                 entry = extData[i]
                 entry.f = forecast;
             }
+
+            entry.fi = entry.f*7/entry.p*100000,
 
             extData[i] = entry;
             extra.push(entry);
@@ -524,12 +532,16 @@ d3.csv(sourceFile).then(function(rawData) {
             .attr('x', xc)
             .text(`Mean Count (last 7 days): ${d3.format(".0f")(d.y)}`)
 
+        dayFocused.select('.second')
+            .attr('x', xc)
+            .text(`7-Day Incidence: ${d3.format(".2f")(d.i)}`)
+
         if (d.f) {
-            dayFocused.select('.second')
+            dayFocused.select('.third')
                 .attr('x', xc)
-                .text(`Estimation: ${d3.format(".0f")(d.f)}`)
+                .text(`Estimation: ${d3.format(".0f")(d.f)} | ${d3.format(".2f")(d.fi)}`)
         } else {
-            dayFocused.select('.second')
+            dayFocused.select('.third')
                 .text('')
         }
     }
