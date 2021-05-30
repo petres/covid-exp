@@ -18,7 +18,7 @@ const svgWidth  = window.innerWidth > 1200 ? window.innerWidth : 1200;
 
 const svgHeight = 600;
 
-const margin = {top: 60, right: 120, bottom: 90, left: 180},
+const margin = {top: 60, right: 120, bottom: 90, left: 120},
       width	 = svgWidth - margin.left - margin.right,
       height = svgHeight - margin.top - margin.bottom;
 
