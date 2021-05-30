@@ -13,13 +13,12 @@ Date.prototype.diffDays = function(date) {
     return Math.ceil((this - date) / (1000 * 60 * 60 * 24))
 }
 
-
 // const svgWidth  = 1200;
 const svgWidth  = window.innerWidth > 1200 ? window.innerWidth : 1200;
 
 const svgHeight = 600;
 
-const margin = {top: 60, right: 120, bottom: 90, left: 120},
+const margin = {top: 60, right: 120, bottom: 90, left: 180},
       width	 = svgWidth - margin.left - margin.right,
       height = svgHeight - margin.top - margin.bottom;
 
@@ -79,6 +78,10 @@ const gx3 = focus.append("g")
 const gya = focus.append("g")
     .attr("class", "y axis cases")
 
+const gya_i = focus.append("g")
+    .attr("class", "y axis incidence")
+//    .attr("transform", `translate(-60, 0)`);
+
 const gy2a = focus.append("g")
     .attr("class", "y axis growth")
     .attr("transform", `translate(${width}, 0)`);
@@ -94,9 +97,19 @@ focus.append("g")
     .append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", -40)
-    .attr("x",0 - (height / 2))
+    .attr("x", 0 - (height / 2))
     .style("text-anchor", "middle")
     .text("Cases");
+
+focus.append("g")
+    .attr("class", "y axis incidence")
+    .append("text")
+    .attr("transform", "rotate(90)")
+    .attr("y", -40)
+    .attr("x", (height / 2))
+    .style("text-anchor", "middle")
+    .text("7-Day-Incidence");
+
 
 focus.append("g")
     .attr("class", "y axis growth")
@@ -229,7 +242,7 @@ d3.csv(sourceFile).then(function(rawData) {
     const baseData = rawData.map(d => {
         return {
             date: parseDate(d.d),
-            yd: parseInt(d.n),
+            y_day: parseInt(d.n),
             y: parseFloat(d.n7),
             v: parseFloat(d.n7),
             i: parseFloat(d.n7)*7/parseInt(d.p)*100000,
@@ -273,16 +286,16 @@ d3.csv(sourceFile).then(function(rawData) {
             if (i >= extData.length) {
                 entry = {
                     date: date,
-                    f: forecast,
+                    f_v: forecast,
                     v: forecast,
                     p: extData[extData.length - 1].p
                 };
             } else {
                 entry = extData[i]
-                entry.f = forecast;
+                entry.f_v = forecast;
             }
 
-            entry.fi = entry.f*7/entry.p*100000,
+            entry.f_i = entry.f_v*7/entry.p*100000,
 
             extData[i] = entry;
             extra.push(entry);
@@ -300,11 +313,11 @@ d3.csv(sourceFile).then(function(rawData) {
 
 
     // calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
-    calcApprox(parseDate("2021-05-01"), parseDate("2021-05-21"))
+    calcApprox(parseDate("2021-05-02"), parseDate("2021-05-11"))
     //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
-    const highestValue = d3.max(baseData, function(d) { return d.yd; });
+    const highestValue = d3.max(baseData, function(d) { return d.y_day; });
     const dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays)]
 
     const x = d3.scaleTime()
@@ -379,7 +392,7 @@ d3.csv(sourceFile).then(function(rawData) {
         contextLineMeanF.datum(extra)
             .attr("d",  d3.line()
                 .x(d => xContext(d.date))
-                .y(d => yContext(d.f))
+                .y(d => yContext(d.f_v))
                 .curve(d3.curveMonotoneX))
     }
 
@@ -422,13 +435,13 @@ d3.csv(sourceFile).then(function(rawData) {
         lineDay.datum(baseData)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => yScale(d.yd))
+                .y(d => yScale(d.y_day))
                 .curve(d3.curveMonotoneX))
 
         lineMeanF.datum(extra)
             .attr("d",  d3.line()
                 .x(d => xz(d.date))
-                .y(d => yScale(d.f))
+                .y(d => yScale(d.f_v))
                 .curve(d3.curveMonotoneX))
 
         const approxStartX = xz(approxStart);
@@ -536,10 +549,10 @@ d3.csv(sourceFile).then(function(rawData) {
             .attr('x', xc)
             .text(`7-Day Incidence: ${d3.format(".2f")(d.i)}`)
 
-        if (d.f) {
+        if (d.f_v) {
             dayFocused.select('.third')
                 .attr('x', xc)
-                .text(`Estimation: ${d3.format(".0f")(d.f)} | ${d3.format(".2f")(d.fi)}`)
+                .text(`Estimation: ${d3.format(".0f")(d.f_v)} | ${d3.format(".2f")(d.f_i)}`)
         } else {
             dayFocused.select('.third')
                 .text('')
@@ -550,7 +563,7 @@ d3.csv(sourceFile).then(function(rawData) {
         .selectAll("circle")
         .data(baseData)
         .enter().append("circle")
-        .attr("cy", function(d) { return yScale(d.yd); })
+        .attr("cy", function(d) { return yScale(d.y_day); })
 
     contextLineMean
         .datum(baseData)
@@ -608,6 +621,16 @@ d3.csv(sourceFile).then(function(rawData) {
             //.tickFormat(d3.format(",.0f")))
         .call(g => g.select(".domain").remove())
 
+    const yAxis_i = (g, y) => {
+        let y_i = y.copy()
+        y_i.domain(y.domain().map(v => v*7/8901064*100000))
+        g.call(d3.axisRight()
+            .ticks(7)
+            .scale(y_i))
+            //.tickFormat(d3.format(",.0f")))
+         .call(g => g.select(".domain").remove())
+    }
+
     const yGrid = (g, y) => g
         .call(d3.axisLeft()
             .scale(y)
@@ -617,14 +640,16 @@ d3.csv(sourceFile).then(function(rawData) {
         .call(g => g.select(".domain").remove())
 
     gya.call(yAxis, yScale)
+    gya_i.call(yAxis_i, yScale)
     gyg.call(yGrid, yScale)
 
     d3.selectAll("#buttons input").on("change", event => {
         yScale = yScales[event.target.value];
         pointsDay
             .selectAll("circle")
-            .attr("cy", function(d) { return yScale(d.yd); });
+            .attr("cy", function(d) { return yScale(d.y_day); });
         gya.call(yAxis, yScale)
+        gya_i.call(yAxis_i, yScale)
         gyg.call(yGrid, yScale)
         redraw(xScale);
     });

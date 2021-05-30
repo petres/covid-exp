@@ -1,6 +1,3 @@
-
-
-
 body {
     margin: 0;
     min-width: 1200px;
@@ -78,7 +75,8 @@ div.gm {
         &.growth text {
             fill: #600;
         }
-        &.cases text {
+        &.cases text,
+        &.incidence text {
             fill: #006;
         }
     }
