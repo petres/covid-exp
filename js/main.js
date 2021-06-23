@@ -30,7 +30,7 @@ const formatDate = d3.timeFormat("%a, %d. %b %Y")
 const parseDate = d3.timeParse("%Y-%m-%d")
 
 
-const forecastDays = 40;
+const forecastDays = 60;
 const approxDays = 44;
 const approxLag = 4;
 
@@ -333,7 +333,7 @@ d3.csv(sourceFile).then(function(rawData) {
             .domain([1, highestValue * 2])
     }
 
-    let yScale = yScales.linear;
+    let yScale = yScales.log;
 
     let growhtF = 1.21;
     const y2 = d3.scaleLog()
@@ -543,7 +543,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
         dayFocused.select('.first')
             .attr('x', xc)
-            .text(`Mean Count (last 7 days): ${d3.format(".0f")(d.y)}`)
+            .text(`Count: ${d.y_day} | Mean Count (7 days): ${d3.format(".0f")(d.y)}`)
 
         dayFocused.select('.second')
             .attr('x', xc)
@@ -655,6 +655,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [xContext(parseDate('2020-09-01')), xContext(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-06-01')), xContext(approxEnd.addDays(forecastDays))])
     focusEvent(extData[extData.length - forecastDays])
 });

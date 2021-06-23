@@ -28,7 +28,7 @@ use.mobility.cats = c(
 if (download) {
     download.file(g$u$cases.ages, g$f$cases.tmp)
     download.file(g$u$mobility.google, g$f$mobility.tmp)
-    download.file(g$u$temp.vienna, g$f$temp.tmp)
+    #download.file(g$u$temp.vienna, g$f$temp.tmp)
 }
 
 # CASES
@@ -40,17 +40,17 @@ d.cases.at = d.cases[Bundesland == 'Österreich', .(
 )]
 
 # TEMP
-d.temp = as.data.table(read.table(gzfile(g$f$temp.tmp), sep = ',', dec = '.'))
-d.temp = d.temp[, .(
-    d = as.Date(V1),
-    temp = V2
-)][d > '2020-01-01' & d < substring(Sys.time(), 1, 10)]
-d.temp = merge(
-    d.temp, data.table(d = as.Date(min(d.temp$d):max(d.temp$d), origin = '1970-01-01'))
-, by='d', all = T)
-d.temp[, temp.n := (shift(temp, 1) + shift(temp, -1))/2]
-d.temp[is.na(temp), temp := temp.n]
-d.temp[, temp.n := NULL]
+# d.temp = as.data.table(read.table(gzfile(g$f$temp.tmp), sep = ',', dec = '.'))
+# d.temp = d.temp[, .(
+#     d = as.Date(V1),
+#     temp = V2
+# )][d > '2020-01-01' & d < substring(Sys.time(), 1, 10)]
+# d.temp = merge(
+#     d.temp, data.table(d = as.Date(min(d.temp$d):max(d.temp$d), origin = '1970-01-01'))
+# , by='d', all = T)
+# d.temp[, temp.n := (shift(temp, 1) + shift(temp, -1))/2]
+# d.temp[is.na(temp), temp := temp.n]
+# d.temp[, temp.n := NULL]
 
 # MOBILITY
 d.mobility = rbindlist(lapply(2020:2021, function(y) 
@@ -62,6 +62,7 @@ d.mobility.at = d.mobility[sub_region_1 == '', .(
     combined_percent_change_from_baseline = rowSums(d.mobility[sub_region_1 == '', names(use.mobility.cats)[use.mobility.cats], with = F])/sum(use.mobility.cats),
     d.mobility[sub_region_1 == '', names(use.mobility.cats), with = F]
 )]
+d.mobility.at[, combined := log((combined_percent_change_from_baseline + 100)/100)]
 rm(d.cases, d.mobility)
 # ------------------------------------------------------------------------------
 
@@ -73,17 +74,18 @@ meanDays = 7
 
 d.cases.at[, n7 := (cumsum(cases.n) - shift(cumsum(cases.n), meanDays, fill = 0))/meanDays]
 d.cases.at[, n7g := sqrt((shift(n7, -2) + shift(n7, -1) + n7)/(n7 + shift(n7, 1) + shift(n7, 2)))]
+d.cases.at[, n7galt := (shift(n7, -5)/shift(n7, 5))]
 
 invisible(sapply(setdiff(colnames(d.mobility.at), 'd'), function (col) {
     d.mobility.at[, (glue('{col}.{meanDays}')) := (cumsum(get(col)) - shift(cumsum(get(col)), meanDays))/meanDays]
     d.mobility.at[, (col) := NULL]
 }))
 
-d.temp[, n7 := (cumsum(temp) - shift(cumsum(temp), meanDays))/meanDays]
+#d.temp[, n7 := (cumsum(temp) - shift(cumsum(temp), meanDays))/meanDays]
 # ggplot(d.temp, aes(x = date, y = n7)) + geom_line()
 
-d.comb = merge(d.cases.at[, .(d, cases.growth = n7g - 1)], d.mobility.at, by='d', all.x = TRUE)
-d.comb = merge(d.comb, d.temp, by='d', all.x = TRUE)
+d.comb = merge(d.cases.at[, .(d, cases.growth = n7galt - 1)], d.mobility.at, by='d', all.x = TRUE)
+#d.comb = merge(d.comb, d.temp, by='d', all.x = TRUE)
 # ------------------------------------------------------------------------------
 
 
@@ -101,8 +103,8 @@ ggplot(
     melt(d.comb[, .(
         d, 
         cases.growth, 
-        residential_percent_change_from_baseline.7,
-        combined_percent_change_from_baseline.7
+        #residential_percent_change_from_baseline.7,
+        combined.7
     )], id.vars = 'd')[, s := scale(value), by=variable], 
     aes(x = d, y = s, group = variable, color = variable)) +
     geom_line()
@@ -111,7 +113,7 @@ ggplot(
 
 
 # CORRELATION
-var = "residential_percent_change_from_baseline.7"
+var = "combined.7"
 leads = -100:100
 cor.dt = data.table(
     lead = leads,
@@ -129,7 +131,7 @@ ggsave(file.path(g$d$tmp, glue('lag-selection.png')))
 lag.sel = cor.dt[abs(cor) == max(abs(cor))]
 lag.sel
 
-ggplot(d.comb[d > '2020-04-01'], aes(x = shift(combined_percent_change_from_baseline.7, lag.sel$lead, type='lead'), y = cases.growth)) +
+ggplot(d.comb[d > '2020-04-01'], aes(x = shift(combined.7, lag.sel$lead, type='lead'), y = cases.growth)) +
     geom_path(aes(color = d), arrow = grid::arrow(length = unit(0.05, "inches"), type = 'closed')) + 
     geom_point(size = 0.5) + 
     scale_color_date(low = '#FF0000', high= '#00FF00', name = 'Date') +  
@@ -149,9 +151,9 @@ library('randomForest')
 d.train = d.comb[, .(
     cases.growth, 
     cases.growth.3= shift(cases.growth, 3),
-    mobility.combined.9 = shift(combined_percent_change_from_baseline.7, 9),
+    mobility.combined.9 = shift(combined.7, 9)
     # mobility.residential.9 = shift(residential_percent_change_from_baseline.7, 9),
-    temp9 = shift(temp, 20)
+    #temp9 = shift(temp, 20)
 )]
 d.train = d.train[complete.cases(d.train)]
 # d.test = loadData(g$f$prep.test)
@@ -174,6 +176,6 @@ sqrt(mean((d.train.test$cases.growth - p.train.test)**2))
 # ------------------------------------------------------------------
 
 r = lm(cases.growth ~ ., d.train)
+r = lm(cases.growth ~ mobility.combined.9, d.train)
 summary(r)
 # ------------------------------------------------------------------------------
-x
