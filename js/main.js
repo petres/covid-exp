@@ -30,7 +30,7 @@ const formatDate = d3.timeFormat("%a, %d. %b %Y")
 const parseDate = d3.timeParse("%Y-%m-%d")
 
 
-const forecastDays = 60;
+const forecastDays = 30;
 const approxDays = 44;
 const approxLag = 4;
 
@@ -313,12 +313,13 @@ d3.csv(sourceFile).then(function(rawData) {
 
 
     // calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
-    calcApprox(parseDate("2021-05-02"), parseDate("2021-05-11"))
+    calcApprox(parseDate("2021-07-05"), parseDate("2021-07-12"))
     //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
     const highestValue = d3.max(baseData, function(d) { return d.y_day; });
-    const dataXrange = [d3.min(baseData, function(d) { return d.date; }), approxEnd.addDays(forecastDays)]
+    const dataXrange = [d3.min(baseData, function(d) { return d.date; }), d3.max(baseData, function(d) { return d.date; }).addDays(forecastDays)]
+    // console.log(d3.max(baseData, function(d) { return d.date; }).addDays(forecastDays))
 
     const x = d3.scaleTime()
         .range([0, width])
@@ -655,6 +656,6 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [xContext(parseDate('2020-06-01')), xContext(approxEnd.addDays(forecastDays))])
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-06-01')), xContext(dataXrange[1])])
     focusEvent(extData[extData.length - forecastDays])
 });
