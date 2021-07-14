@@ -313,7 +313,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
 
     // calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
-    calcApprox(parseDate("2021-07-05"), parseDate("2021-07-12"))
+    calcApprox(parseDate("2021-07-06"), parseDate("2021-07-12"))
     //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
@@ -617,16 +617,16 @@ d3.csv(sourceFile).then(function(rawData) {
 
     const yAxis = (g, y) => g
         .call(d3.axisLeft()
-            .ticks(5)
+            .ticks(5, d3.format(",.0f"))
             .scale(y))
-            //.tickFormat(d3.format(",.0f")))
+            // .tickFormat()
         .call(g => g.select(".domain").remove())
 
     const yAxis_i = (g, y) => {
         let y_i = y.copy()
         y_i.domain(y.domain().map(v => v*7/8901064*100000))
         g.call(d3.axisRight()
-            .ticks(7)
+            .ticks(7, d3.format(",.0f"))
             .scale(y_i))
             //.tickFormat(d3.format(",.0f")))
          .call(g => g.select(".domain").remove())
