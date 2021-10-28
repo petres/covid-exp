@@ -30,7 +30,7 @@ const formatDate = d3.timeFormat("%a, %d. %b %Y")
 const parseDate = d3.timeParse("%Y-%m-%d")
 
 
-const forecastDays = 30;
+const forecastDays = 90;
 const approxDays = 44;
 const approxLag = 4;
 
@@ -313,7 +313,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
 
     // calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
-    calcApprox(parseDate("2021-07-06"), parseDate("2021-07-12"))
+    calcApprox(parseDate("2021-07-17"), parseDate("2021-07-23"))
     //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
@@ -617,7 +617,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
     const yAxis = (g, y) => g
         .call(d3.axisLeft()
-            .ticks(5, d3.format(",.0f"))
+            .ticks(5, d3.format(",.0r"))
             .scale(y))
             // .tickFormat()
         .call(g => g.select(".domain").remove())
@@ -626,7 +626,7 @@ d3.csv(sourceFile).then(function(rawData) {
         let y_i = y.copy()
         y_i.domain(y.domain().map(v => v*7/8901064*100000))
         g.call(d3.axisRight()
-            .ticks(7, d3.format(",.0f"))
+            .ticks(7, d3.format(",.1r"))
             .scale(y_i))
             //.tickFormat(d3.format(",.0f")))
          .call(g => g.select(".domain").remove())
@@ -656,6 +656,7 @@ d3.csv(sourceFile).then(function(rawData) {
     });
 
     // init with view params
-    brush.move(context.select('.brush'), [xContext(parseDate('2020-06-01')), xContext(dataXrange[1])])
+    let today = new Date();
+    brush.move(context.select('.brush'), [xContext(parseDate('2020-06-01')), xContext(today.addDays(30))])
     focusEvent(extData[extData.length - forecastDays])
 });
