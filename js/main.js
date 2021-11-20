@@ -617,7 +617,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
     const yAxis = (g, y) => g
         .call(d3.axisLeft()
-            .ticks(5, d3.format(",.0r"))
+            .ticks(5, d3.format(",.0f"))
             .scale(y))
             // .tickFormat()
         .call(g => g.select(".domain").remove())
@@ -626,7 +626,7 @@ d3.csv(sourceFile).then(function(rawData) {
         let y_i = y.copy()
         y_i.domain(y.domain().map(v => v*7/8901064*100000))
         g.call(d3.axisRight()
-            .ticks(7, d3.format(",.1r"))
+            .ticks(7, d3.format(",.0f"))
             .scale(y_i))
             //.tickFormat(d3.format(",.0f")))
          .call(g => g.select(".domain").remove())
