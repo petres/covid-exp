@@ -313,7 +313,7 @@ d3.csv(sourceFile).then(function(rawData) {
 
 
     // calcApprox(parseDate("2021-02-09"), parseDate("2021-03-23"))
-    calcApprox(parseDate("2021-07-17"), parseDate("2021-07-23"))
+    calcApprox(parseDate("2022-03-20"), parseDate("2022-03-22"))
     //calcApprox(baseData[baseData.length - 1 - approxLag - approxDays].date, baseData[baseData.length - 1 - approxLag].date)
 
     //const dataXrange = d3.extent(baseData, function(d) { return d.date; });
